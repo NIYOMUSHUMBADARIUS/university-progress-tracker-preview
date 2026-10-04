@@ -1,0 +1,3692 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Progress Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg-1: #071827;
+            --bg-2: #0f172a;
+            --bg-3: #0f3d7a;
+            --panel: rgba(15, 23, 42, 0.76);
+            --panel-soft: rgba(255,255,255,0.04);
+            --line: rgba(255,255,255,0.12);
+            --text: #edf6ff;
+            --muted: #cfe0f7;
+            --primary: #60a5fa;
+            --primary-2: #34d399;
+            --warning: #fbbf24;
+            --danger: #fb7185;
+            --success: #4ade80;
+            --purple: #a78bfa;
+        }
+
+        body[data-theme="white"] {
+            --bg-1: #f3f4f6;
+            --bg-2: #e5e7eb;
+            --bg-3: #dbeafe;
+            --panel: rgba(255,255,255,0.9);
+            --panel-soft: rgba(15, 23, 42, 0.02);
+            --line: rgba(15, 23, 42, 0.1);
+            --text: #111827;
+            --muted: #374151;
+            --primary: #2563eb;
+            --primary-2: #14b8a6;
+            --warning: #d97706;
+            --danger: #e11d48;
+            --success: #16a34a;
+            --purple: #7c3aed;
+        }
+
+        body[data-theme="black"] {
+            --bg-1: #020817;
+            --bg-2: #020617;
+            --bg-3: #0f172a;
+            --panel: rgba(15, 23, 42, 0.92);
+            --panel-soft: rgba(255,255,255,0.02);
+            --line: rgba(255,255,255,0.08);
+            --text: #f8fafc;
+            --muted: #cbd5e1;
+            --primary: #60a5fa;
+            --primary-2: #22c55e;
+            --warning: #fbbf24;
+            --danger: #f43f5e;
+            --success: #4ade80;
+            --purple: #8b5cf6;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 35%, var(--bg-3) 100%);
+            color: var(--text);
+        }
+
+        .container {
+            width: min(1200px, 94%);
+            margin: 0 auto;
+            padding: 28px 0 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 12px;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #0a1830;
+            font-size: 1.3rem;
+            animation: pulse 2s infinite;
+        }
+
+        .nav-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav-btn {
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.22s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(96,165,250,0.15);
+            border-color: rgba(96,165,250,0.45);
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .nav-menu-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            border-radius: 12px;
+            width: 46px;
+            height: 42px;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            padding: 0;
+        }
+
+        .nav-menu-btn:hover {
+            background: rgba(96,165,250,0.14);
+            border-color: rgba(96,165,250,0.35);
+        }
+
+        .nav-menu-btn .bar {
+            display: block;
+            width: 20px;
+            height: 2px;
+            border-radius: 999px;
+            background: currentColor;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .nav-menu-btn .bar:nth-child(1) { top: 13px; }
+        .nav-menu-btn .bar:nth-child(2) { top: 20px; }
+        .nav-menu-btn .bar:nth-child(3) { top: 27px; }
+
+        .nav-menu-btn[aria-expanded="true"] .bar:nth-child(1) {
+            transform: translateX(-50%) rotate(45deg);
+            top: 20px;
+        }
+
+        .nav-menu-btn[aria-expanded="true"] .bar:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav-menu-btn[aria-expanded="true"] .bar:nth-child(3) {
+            transform: translateX(-50%) rotate(-45deg);
+            top: 20px;
+        }
+
+        .nav-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 240px;
+            background: rgba(8, 15, 29, 0.9);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            box-shadow: 0 22px 40px rgba(2, 6, 23, 0.55);
+            padding: 12px;
+            display: none;
+            z-index: 20;
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-panel.show {
+            display: grid;
+            gap: 8px;
+        }
+
+        .nav-panel .nav-btn {
+            width: 100%;
+            text-align: left;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .settings-ghost {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transform: translateX(8px);
+            transition: opacity 0.2s ease, width 0.2s ease, transform 0.2s ease;
+        }
+
+        .actions:hover .settings-ghost,
+        .actions:focus-within .settings-ghost,
+        .settings-ghost:hover {
+            opacity: 1;
+            width: auto;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        .ellipsis-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text);
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .language-toggle,
+        .theme-toggle {
+            display: inline-flex;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .theme-toggle {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .lang-btn,
+        .theme-btn {
+            padding: 7px 8px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.68rem;
+        }
+
+        .lang-btn.active,
+        .theme-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #2563eb);
+            color: white;
+            box-shadow: 0 12px 25px rgba(59,130,246,0.25);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: white;
+        }
+
+        .page-section {
+            display: none;
+            margin-top: 24px;
+            animation: fadeUp 0.45s ease;
+        }
+
+        .page-section.active { display: block; }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 18px;
+        }
+
+        .hero-card, .panel, .mini-card, .info-card, .stat-box, .report-box, .profile-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.2), 0 18px 36px rgba(7, 24, 39, 0.32);
+            animation: floatIn 0.7s ease;
+            transform: perspective(1000px) rotateX(0deg);
+        }
+
+        .hero-card {
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.46), rgba(16, 185, 129, 0.2));
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.22), inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+
+        .depth-card {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 16px 34px rgba(9, 11, 18, 0.38), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+
+        .depth-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(130deg, rgba(255,255,255,0.17), transparent 35%, rgba(96,165,250,0.12));
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(147,197,253,0.14);
+            border: 1px solid rgba(147,197,253,0.3);
+            color: #dfeefe;
+            font-size: 0.78rem;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 4vw, 3.4rem);
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 560px;
+        }
+
+        .cta-row {
+            margin-top: 22px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .metric-grid {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .mini-card {
+            padding: 18px 14px;
+            text-align: center;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .mini-card .value {
+            font-size: 1.85rem;
+            font-weight: 700;
+        }
+
+        .mini-card .label {
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .info-card {
+            padding: 22px;
+        }
+
+        .info-title {
+            font-size: 1.12rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .progress-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .progress-item {
+            display: block;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-size: 0.94rem;
+        }
+
+        .bar {
+            width: 100%;
+            height: 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--primary), var(--primary-2));
+            animation: loadBar 1.1s ease;
+        }
+
+        .section-row {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(170px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-box {
+            padding: 22px 18px;
+        }
+
+        .stat-box h3 {
+            color: var(--muted);
+            margin: 0 0 10px;
+            font-size: 0.85rem;
+        }
+
+        .stat-box .big {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 1.7rem;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: white;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(96,165,250,0.8);
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+        }
+
+        .student-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            padding: 14px 16px;
+        }
+
+        .student-meta strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .student-meta span {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .student-badge {
+            border-radius: 999px;
+            padding: 7px 10px;
+            background: rgba(52,211,153,0.12);
+            border: 1px solid rgba(52,211,153,0.3);
+            color: #d1fae5;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.09);
+        }
+
+        th {
+            background: rgba(255,255,255,0.03);
+            color: #e4efff;
+            font-weight: 700;
+        }
+
+        .summary-box {
+            display: grid;
+            gap: 14px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+
+        .summary-item .label {
+            color: var(--muted);
+        }
+
+        .summary-item strong {
+            font-size: 1.08rem;
+        }
+
+        .live-note,
+        .ai-box,
+        .live-panel {
+            background: linear-gradient(135deg, rgba(59,130,246,0.14), rgba(52,211,153,0.08));
+            border: 1px solid rgba(96,165,250,0.2);
+            border-radius: 14px;
+            padding: 16px;
+            color: #dbeafe;
+            line-height: 1.7;
+        }
+
+        .ai-chat {
+            display: grid;
+            gap: 12px;
+        }
+
+        .ai-chat-messages {
+            display: grid;
+            gap: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .ai-message {
+            max-width: 85%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .ai-message.bot {
+            justify-self: start;
+            background: rgba(148,163,184,0.12);
+            border: 1px solid rgba(148,163,184,0.2);
+            color: #e2e8f0;
+        }
+
+        .ai-message.user {
+            justify-self: end;
+            background: rgba(96,165,250,0.18);
+            border: 1px solid rgba(96,165,250,0.28);
+            color: #eff6ff;
+        }
+
+        .ai-message-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ai-message-editor {
+            width: 100%;
+            min-height: 90px;
+            resize: vertical;
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.35);
+            background: rgba(15,23,42,0.35);
+            color: #f8fafc;
+            padding: 10px 12px;
+            font: inherit;
+            box-sizing: border-box;
+        }
+
+        .ai-message-action {
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+        }
+
+        .ai-message-action.delete {
+            border-color: rgba(251,113,133,0.35);
+            color: #fecdd3;
+        }
+
+        .ai-chat-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .ai-chat-form input {
+            min-height: 42px;
+        }
+
+        .ai-chat-form button {
+            min-width: 110px;
+        }
+
+        .live-panel {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+
+        .quick-score-summary {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .live-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #dcfce7;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 18px rgba(74,222,128,0.9);
+            animation: pulseLive 1.4s infinite;
+        }
+
+        .update-form {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(120px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        .update-form .field {
+            width: 100%;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .course-editor {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(140px, 1fr));
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 18px;
+        }
+
+        .course-editor .field {
+            width: 100%;
+        }
+
+        .editable-table input {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            color: white;
+        }
+
+        .report-box {
+            padding: 18px;
+            min-height: 160px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .report-box h3 {
+            margin: 0 0 12px;
+            font-size: 1rem;
+        }
+
+        .report-box ul {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.8;
+            color: var(--muted);
+        }
+
+        .profile-card {
+            padding: 18px;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            font-weight: 700;
+            font-size: 1.4rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 8, 18, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-card {
+            width: min(420px, calc(100% - 24px));
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.38);
+        }
+
+        .login-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 6px;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+
+        .login-tab-btn {
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 700;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .login-tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--purple));
+            color: white;
+        }
+
+        .login-card h2 {
+            margin: 0 0 8px;
+            font-size: 1.8rem;
+        }
+
+        .login-card p {
+            color: var(--muted);
+            margin: 0 0 20px;
+        }
+
+        .password-field-wrap {
+            position: relative;
+        }
+
+        .password-field-wrap input {
+            padding-right: 46px;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .login-error {
+            min-height: 20px;
+            color: #fecdd3;
+            margin-top: 10px;
+            font-size: 0.88rem;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--muted);
+            margin: 18px 0;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .separator::before, .separator::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .google-btn {
+            width: 100%;
+            background: white;
+            color: #111827;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .google-chooser {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .google-chooser.visible {
+            display: block;
+        }
+
+        .account-option {
+            width: 100%;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        .account-option strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-danger {
+            background: rgba(251, 113, 133, 0.12);
+            border: 1px solid rgba(251, 113, 133, 0.45);
+            color: #fecdd3;
+        }
+
+        .profile-photo-field {
+            margin-top: 12px;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .detail-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 12px;
+            min-width: 0;
+        }
+
+        .detail-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .detail-box strong {
+            display: block;
+            font-size: 1rem;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .sess-card {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @keyframes pulseLive {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+        }
+
+        @keyframes loadBar {
+            from { width: 0; }
+            to { width: var(--target-width, 100%); }
+        }
+
+        @media (max-width: 860px) {
+            .hero, .two-col, .report-grid, .form-grid, .profile-details {
+                grid-template-columns: 1fr;
+            }
+            .metric-grid, .section-row {
+                grid-template-columns: repeat(2, minmax(120px, 1fr));
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .metric-grid, .section-row { grid-template-columns: 1fr; }
+        }
+        /* Open Live fixed button */
+        .open-live-wrapper {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 9999;
+        }
+        #openLiveBtn {
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.28);
+        }
+        #openLiveBtn:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-tabs">
+                <button type="button" class="login-tab-btn active" data-auth-mode="signin">Sign in</button>
+                <button type="button" class="login-tab-btn" data-auth-mode="signup">Sign up</button>
+            </div>
+            <h2 id="authTitle">University login</h2>
+            <p id="authSubtitle">Sign in with your email and password.</p>
+            <form id="loginForm">
+                <div class="field">
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" type="email" placeholder="you@university.edu" required>
+                </div>
+                <div class="field">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-field-wrap">
+                        <input id="loginPassword" type="password" placeholder="Enter password" required>
+                        <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="Toggle password visibility">👁</button>
+                    </div>
+                </div>
+                <div class="field" id="confirmPasswordField" style="display:none;">
+                    <label for="loginConfirmPassword">Confirm password</label>
+                    <input id="loginConfirmPassword" type="password" placeholder="Confirm password">
+                </div>
+                <div class="field" id="googleEmailField" style="display:none;">
+                    <label for="googleEmailInput">Google email</label>
+                    <input id="googleEmailInput" type="email" placeholder="you@gmail.com">
+                </div>
+                <div id="googleChooser" class="google-chooser" aria-live="polite"></div>
+                <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width:100%; margin-top:16px;">Sign in</button>
+                <div class="separator">or</div>
+                <button type="button" class="google-btn" id="googleLoginBtn">Continue with Google</button>
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="topbar">
+            <div class="brand">
+                <div class="logo">🎓</div>
+                <div>University Progress Hub</div>
+            </div>
+
+            <div class="nav-shell">
+                <button class="nav-menu-btn" id="navMenuBtn" type="button" aria-expanded="false" aria-label="Open navigation menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <div class="nav-panel" id="navPanel" aria-label="Hidden navigation menu">
+                    <button class="nav-btn active" data-target="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-target="profile">Profile</button>
+                    <button class="nav-btn" data-target="courses">Courses</button>
+                    <button class="nav-btn" data-target="tasks">Assignments</button>
+                    <button class="nav-btn" data-target="attendance">Attendance</button>
+                    <button class="nav-btn" data-target="ai">AI Advisor</button>
+                </div>
+            </div>
+
+            <div class="actions">
+                <div class="settings-ghost" aria-label="Hidden settings">
+                    <div class="language-toggle">
+                        <button class="lang-btn active" data-lang="rw">RW</button>
+                        <button class="lang-btn" data-lang="en">EN</button>
+                    </div>
+                    <div class="theme-toggle" aria-label="Theme selector">
+                        <button class="theme-btn active" data-theme="current">Current</button>
+                        <button class="theme-btn" data-theme="white">White</button>
+                        <button class="theme-btn" data-theme="black">Black</button>
+                    </div>
+                </div>
+                <button type="button" class="ellipsis-trigger" aria-label="More settings">…</button>
+                <button class="btn btn-secondary" id="logoutBtn">Sign out</button>
+            </div>
+        </header>
+
+        <section id="dashboard" class="page-section active">
+            <div class="hero">
+                <div class="hero-card">
+                    <div class="badge">University Performance Tracker</div>
+                    <h1 id="mainTitle">Gukurikirana ubuzima bw’umunyeshuri mu kaminuza.</h1>
+                    <p class="subtitle" id="mainSubtitle">
+                        Sisitemu ikurikirana amanota, kwitabira, amasomo, ubufasha, n’iterambere ry’umwaka wose mu Kinyarwanda no mu cyongereza.
+                    </p>
+                    <div class="cta-row">
+                        <button class="btn btn-primary" id="ctaPrimary">Tangira ikurikirana</button>
+                        <button class="btn btn-secondary" id="ctaSecondary">Reba raporo</button>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="mini-card depth-card">
+                            <div class="value" id="gpaValue">3.7</div>
+                            <div class="label" id="gpaLabel">GPA</div>
+                        </div>
+                        <div class="mini-card depth-card">
+                            <div class="value" id="attendanceValue">92%</div>
+                            <div class="label" id="attendanceLabel">Attendance</div>
+                        </div>
+                        <div class="mini-card depth-card">
+                            <div class="value" id="creditsValue">136</div>
+                            <div class="label" id="creditsLabel">Credits</div>
+                        </div>
+                        <div class="mini-card depth-card">
+                            <div class="value">AI</div>
+                            <div class="label">Advisor</div>
+                        </div>
+                    </div>
+
+                    <div class="live-panel depth-card">
+                        <div>
+                            <div class="live-status">
+                                <span class="live-dot"></span>
+                                <span id="liveStatusText">Live tracking is active</span>
+                            </div>
+                            <div id="liveSignal" style="margin-top:10px; color: var(--muted);">Every change updates the dashboard immediately.</div>
+                        </div>
+
+                        <form id="liveUpdateForm" class="update-form">
+                            <div class="field">
+                                <label for="courseInput">Course</label>
+                                <select id="courseInput" required></select>
+                            </div>
+                            <div class="field">
+                                <label for="scoreInput">New mark</label>
+                                <input id="scoreInput" type="number" min="0" max="100" value="88" required>
+                            </div>
+                            <div class="field">
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </div>
+                            <div class="field" style="grid-column: 1 / -1; margin-top: 4px;">
+                                <div id="quickScoreSummary" class="quick-score-summary">Overall percentage: 0%</div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-title" id="progressTitle">Ubugenzuzi bw’umwaka</div>
+                    <div class="progress-list">
+                        <div class="progress-item">
+                            <div class="item-row">
+                                <span id="subjectScoreText">Amanota by’amasomo</span>
+                                <strong id="subjectProgress">86%</strong>
+                            </div>
+                            <div class="bar"><div class="bar-fill" style="--target-width:86%; width:86%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="item-row">
+                                <span id="attendanceProgressText">Kwitabira</span>
+                                <strong>92%</strong>
+                            </div>
+                            <div class="bar"><div class="bar-fill" style="--target-width:92%; width:92%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="item-row">
+                                <span id="engagementText">Gukora cyane</span>
+                                <strong>89%</strong>
+                            </div>
+                            <div class="bar"><div class="bar-fill" style="--target-width:89%; width:89%"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="item-row">
+                                <span id="aiText">Inama za AI</span>
+                                <strong>94%</strong>
+                            </div>
+                            <div class="bar"><div class="bar-fill" style="--target-width:94%; width:94%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="info-title" style="margin-top: 20px;">Full student overview</div>
+                    <div class="overview-list">
+                        <div class="overview-item">
+                            <span>Student</span>
+                            <strong id="overviewStudentName">Aline Mukiza</strong>
+                        </div>
+                        <div class="overview-item">
+                            <span>Faculty</span>
+                            <strong id="overviewFaculty">Computer Science</strong>
+                        </div>
+                        <div class="overview-item">
+                            <span>Year</span>
+                            <strong id="overviewYear">3rd Year</strong>
+                        </div>
+                        <div class="overview-item">
+                            <span>Period</span>
+                            <strong id="overviewAcademicPeriod">Academic period</strong>
+                        </div>
+                        <div class="overview-item">
+                            <span>Courses</span>
+                            <strong id="overviewCourseCount">0</strong>
+                        </div>
+                        <div class="overview-item">
+                            <span>Weak subject</span>
+                            <strong id="overviewWeakCourse">No data</strong>
+                        </div>
+                    </div>
+
+                    <div class="info-title" style="margin-top: 18px;">Per-subject tracking</div>
+                    <div id="courseStatusList" class="subject-summary"></div>
+                </div>
+            </div>
+
+            <div class="section-row">
+                <div class="stat-box">
+                    <h3 id="trendLabel">Iterambere</h3>
+                    <div class="big">+12%</div>
+                </div>
+                <div class="stat-box">
+                    <h3 id="strongLabel">Students with strong results</h3>
+                    <div class="big">218</div>
+                </div>
+                <div class="stat-box">
+                    <h3 id="alertLabel">Needs attention</h3>
+                    <div class="big">24</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="profile" class="page-section">
+            <div class="section-heading">
+                <h2 id="profileTitle">Profile</h2>
+                <p id="profileSub">Ibipimo by’umunyeshuri n’imiterere ye.</p>
+            </div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <div class="sess-card" style="margin-bottom: 14px;">
+                        <div>
+                            <h3 id="accountHead">University account</h3>
+                            <p id="accountText">Each student has a separate personal tracking record and private data space.</p>
+                        </div>
+                    </div>
+                    <ul class="student-list" id="studentList"></ul>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="avatar" id="profileAvatar">A</div>
+                        <div>
+                            <h3 id="profileName">Aline Mukiza</h3>
+                            <small id="profileRole">Student</small>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <div class="detail-box">
+                            <span id="facultyLabel">Faculty</span>
+                            <strong id="profileFacultyValue">Computer Science</strong>
+                        </div>
+                        <div class="detail-box">
+                            <span id="yearLabel">Year</span>
+                            <strong id="profileYearValue">3rd Year</strong>
+                        </div>
+                        <div class="detail-box">
+                            <span id="statusLabel">Status</span>
+                            <strong id="studentStatus">Active</strong>
+                        </div>
+                        <div class="detail-box">
+                            <span id="supportLabel">Support</span>
+                            <strong>Mentorship</strong>
+                        </div>
+                        <div class="detail-box">
+                            <span id="mailLabel">Email</span>
+                            <strong id="profileEmailValue">aline@student.univ.rw</strong>
+                        </div>
+                        <div class="detail-box">
+                            <span id="phoneLabel">Phone</span>
+                            <strong id="profilePhoneValue">+250 788 000 001</strong>
+                        </div>
+                    </div>
+
+                    <form id="profileForm" style="margin-top: 20px;">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="profileNameInput">Full name</label>
+                                <input id="profileNameInput" type="text" required>
+                            </div>
+                            <div class="field">
+                                <label for="profileFacultyInput">Faculty</label>
+                                <input id="profileFacultyInput" type="text" required>
+                            </div>
+                            <div class="field">
+                                <label for="profileYearInput">Year</label>
+                                <input id="profileYearInput" type="text" required>
+                            </div>
+                            <div class="field">
+                                <label for="profileStatusInput">Status</label>
+                                <input id="profileStatusInput" type="text" required>
+                            </div>
+                            <div class="field">
+                                <label for="profileEmailInput">Email</label>
+                                <input id="profileEmailInput" type="email" required>
+                            </div>
+                            <div class="field">
+                                <label for="profilePasswordInput">Password</label>
+                                <input id="profilePasswordInput" type="password" required>
+                            </div>
+                            <div class="field">
+                                <label for="profilePhoneInput">Phone</label>
+                                <input id="profilePhoneInput" type="tel" required>
+                            </div>
+                            <div class="field profile-photo-field" style="grid-column: 1 / -1;">
+                                <label for="profileImageInput">Profile picture</label>
+                                <input id="profileImageInput" type="file" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button type="submit" class="btn btn-primary">Save profile</button>
+                            <button type="button" class="btn btn-secondary" id="addStudentBtn">Add student</button>
+                            <button type="button" class="btn btn-danger" id="deleteProfileBtn">Delete profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="courses" class="page-section">
+            <div class="section-heading">
+                <h2 id="coursesTitle">Courses</h2>
+                <p id="coursesSub">Mudasobwa ya buri isomo hamwe n’icyiciro cy’umwaka.</p>
+            </div>
+            <div class="panel">
+                <div class="panel" style="margin-bottom: 16px;">
+                    <form id="courseUpdateForm" class="course-editor">
+                        <div class="field">
+                            <label for="courseNameInput">Course</label>
+                            <input id="courseNameInput" type="text" placeholder="e.g. Mathematics" required>
+                        </div>
+                        <div class="field">
+                            <label for="courseCodeInput">Code</label>
+                            <input id="courseCodeInput" type="text" placeholder="e.g. CS101" required>
+                        </div>
+                        <div class="field">
+                            <label for="courseGradeInput">Grade</label>
+                            <input id="courseGradeInput" type="number" min="0" max="100" value="85" required>
+                        </div>
+                        <div class="field">
+                            <label for="courseCreditsInput">Credits</label>
+                            <input id="courseCreditsInput" type="number" min="1" max="10" value="3" required>
+                        </div>
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn btn-primary">Update data</button>
+                        </div>
+                    </form>
+                </div>
+
+                <table class="editable-table">
+                    <thead>
+                        <tr>
+                            <th id="courseCol">Course</th>
+                            <th id="codeCol">Code</th>
+                            <th id="gradeCol">Grade</th>
+                            <th id="creditsCol">Credits</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coursesTableBody"></tbody>
+                </table>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <form id="taskUploadForm" class="course-editor">
+                        <div class="field">
+                            <label for="taskUploadDateInput">Date</label>
+                            <input id="taskUploadDateInput" type="date" required>
+                        </div>
+                        <div class="field">
+                            <label for="taskUploadCourseInput">Course</label>
+                            <input id="taskUploadCourseInput" list="taskUploadCourseOptions" type="text" placeholder="e.g. AI" required>
+                            <datalist id="taskUploadCourseOptions"></datalist>
+                        </div>
+                        <div class="field">
+                            <label for="taskUploadNameInput">Task name</label>
+                            <input id="taskUploadNameInput" type="text" placeholder="e.g. Assignment 1" required>
+                        </div>
+                        <div class="field">
+                            <label for="taskUploadMarkInput">Mark</label>
+                            <input id="taskUploadMarkInput" type="number" min="0" max="100" placeholder="e.g. 85">
+                        </div>
+                        <div class="field">
+                            <label for="taskUploadDocumentInput">Upload document</label>
+                            <input id="taskUploadDocumentInput" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                        </div>
+                        <div class="field" style="grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <button type="submit" class="btn btn-primary">Upload task</button>
+                            <strong id="taskCoursePercentageValue" style="color: var(--muted);">Course total: 0%</strong>
+                            <strong id="taskOverallPercentageValue" style="color: var(--muted);">All courses total: 0%</strong>
+                        </div>
+                    </form>
+                </div>
+
+                <table class="editable-table" style="margin-top: 18px;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Course</th>
+                            <th>Task</th>
+                            <th>Mark</th>
+                            <th>Document</th>
+                            <th>Task %</th>
+                            <th>Overall %</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskUploadsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tasks" class="page-section">
+            <div class="section-heading">
+                <h2>Assignments</h2>
+                <p>Track every assignment, project, and course submission with its date and completion status.</p>
+            </div>
+
+            <div class="panel" style="margin-bottom: 18px;">
+                <form id="assignmentTaskForm" class="course-editor">
+                    <div class="field">
+                        <label for="assignmentCourseInput">Course</label>
+                        <input id="assignmentCourseInput" list="taskUploadCourseOptions" type="text" placeholder="e.g. Mathematics" required>
+                    </div>
+                    <div class="field">
+                        <label for="assignmentTypeInput">Type</label>
+                        <select id="assignmentTypeInput">
+                            <option value="Assignment">Assignment</option>
+                            <option value="Project">Project</option>
+                            <option value="Coursework">Coursework</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="assignmentNameInput">Task name</label>
+                        <input id="assignmentNameInput" type="text" placeholder="e.g. Research paper" required>
+                    </div>
+                    <div class="field">
+                        <label for="assignmentDateInput">Submission date</label>
+                        <input id="assignmentDateInput" type="date" required>
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary">Add task</button>
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1; margin-top: -6px;">
+                        <label for="assignmentStatusInput">Status</label>
+                        <select id="assignmentStatusInput">
+                            <option value="incomplete">Not completed</option>
+                            <option value="complete">Completed</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel">
+                <table class="editable-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Course</th>
+                            <th>Type</th>
+                            <th>Submission date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignmentTasksTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="attendance" class="page-section">
+            <div class="section-heading">
+                <h2 id="attendanceTitle">Attendance</h2>
+                <p id="attendanceSub">Kwitabira amasomo, imiramo, n’amanota by’ukwezi.</p>
+            </div>
+
+            <div class="panel" style="margin-bottom: 18px;">
+                <form id="attendanceEntryForm" class="course-editor">
+                    <div class="field">
+                        <label for="attendanceDateInput">Date</label>
+                        <input id="attendanceDateInput" type="date" required>
+                    </div>
+                    <div class="field">
+                        <label for="attendanceCourseInput">Course</label>
+                        <input id="attendanceCourseInput" type="text" placeholder="e.g. AI" required>
+                    </div>
+                    <div class="field">
+                        <label for="attendancePeriodInput">Academic period</label>
+                        <input id="attendancePeriodInput" type="text" placeholder="e.g. Semester 1 / 2026" required>
+                    </div>
+                    <div class="field">
+                        <label for="attendanceStatusInput">Status</label>
+                        <select id="attendanceStatusInput">
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                        </select>
+                    </div>
+                    <div class="field" style="grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary">Save attendance</button>
+                        <button type="button" class="btn btn-secondary" id="resetAttendanceFormBtn">Restart form</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <div class="summary-item" style="margin-bottom: 16px;">
+                        <span class="label">Academic period</span>
+                        <strong id="activeAcademicPeriodValue">Academic period</strong>
+                    </div>
+                    <table class="editable-table">
+                        <thead>
+                            <tr>
+                                <th id="monthCol">Date</th>
+                                <th id="presentCol">Course</th>
+                                <th id="absentCol">Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="panel summary-box">
+                    <div class="summary-item">
+                        <span class="label" id="overallLabel">Overall attendance</span>
+                        <strong id="overallAttendanceValue">92%</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label" id="nextStepLabel">Next action</span>
+                        <strong id="nextActionValue">Attend all lectures</strong>
+                    </div>
+                    <div class="report-box">
+                        <h3>Module attendance</h3>
+                        <ul id="courseAttendanceList"></ul>
+                    </div>
+                    <div class="live-note" id="attendanceNote">
+                        Umunyeshuri yitoreye neza, ariko akwiye kongera kwitabira amasomo ya laboratoire no mu gihe cy’ibiganiro.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai" class="page-section">
+            <div class="section-heading">
+                <h2 id="aiTitle">AI Advisor</h2>
+                <p id="aiSub">Inama z’inyongera mu Kinyarwanda no mu Cyongereza.</p>
+            </div>
+
+            <div class="panel">
+                <div class="ai-box" id="aiAdvice">
+                    Your performance is strong overall. Focus on consistency in practical labs, project submission deadlines, and time management to maintain a GPA above 3.7.
+                </div>
+                <div class="ai-chat" style="margin-top: 16px;">
+                    <div class="ai-chat-messages" id="aiChatMessages"></div>
+                    <form id="aiChatForm" class="ai-chat-form">
+                        <input id="aiChatInput" type="text" placeholder="Ask the AI advisor about your grades, attendance, or study plan..." aria-label="Ask the AI advisor">
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                    <div class="ai-chat-config" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; align-items: center; justify-content: flex-end;">
+                        <button type="button" id="clearAiChatBtn" class="btn btn-danger">Clear chat</button>
+                    </div>
+                    <div class="ai-chat-config" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; align-items: center;">
+                        <input id="aiApiKeyInput" type="password" placeholder="OpenAI API key" aria-label="OpenAI API key" style="min-width: 230px;">
+                        <input id="aiApiModelInput" type="text" value="gpt-4o-mini" aria-label="AI model" style="width: 140px;">
+                        <button type="button" id="aiApiSaveBtn" class="btn btn-secondary">Save AI</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="open-live-wrapper">
+        <button id="openLiveBtn" class="btn btn-primary" title="Open this page in a new window">Open Live</button>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'university_tracker_store_v1';
+        const DEMO_ACCOUNT_EMAILS = new Set([
+            'aline@student.univ.rw',
+            'eric@student.univ.rw'
+        ]);
+        const defaultStore = {
+            language: 'rw',
+            theme: 'current',
+            isLoggedIn: false,
+            selectedUserId: '',
+            aiApiKey: '',
+            aiApiModel: 'gpt-4o-mini',
+            users: {}
+        };
+
+        const translations = {
+            rw: {
+                title: 'Gukurikirana ubuzima bw’umunyeshuri mu kaminuza.',
+                subtitle: 'Sisitemu ikurikirana amanota, kwitabira, amasomo, ubufasha, n’iterambere ry’umwaka wose mu Kinyarwanda no mu cyongereza.',
+                buttonPrimary: 'Tangira ikurikirana',
+                buttonSecondary: 'Reba raporo',
+                progressTitle: 'Ubugenzuzi bw’umwaka',
+                subjectText: 'Amanota by’amasomo',
+                attendanceText: 'Kwitabira',
+                engagement: 'Gukora cyane',
+                aiText: 'Inama za AI',
+                trend: 'Iterambere',
+                strong: 'Abanyeshuri bafite amanota meza',
+                alert: 'Igikenewe kubonwa',
+                profileTitle: 'Profile',
+                profileSub: 'Ibipimo by’umunyeshuri n’imiterere ye.',
+                faculty: 'Ishami',
+                year: 'Umwaka',
+                status: 'Status',
+                support: 'Ubufasha',
+                accountHead: 'Konti ya kaminuza',
+                accountText: 'Buri munyeshuri afite ibikoresho bye byihariye kandi by’ukuri mu sisitemu.',
+                mail: 'Imeyiri',
+                phone: 'Telefoni',
+                coursesTitle: 'Amasomo',
+                coursesSub: 'Mudasobwa ya buri isomo hamwe n’icyiciro cy’umwaka.',
+                course: 'Isomo',
+                code: 'Kode',
+                grade: 'Amanota',
+                credits: 'Credits',
+                attendanceTitle: 'Kwitabira',
+                attendanceSub: 'Kwitabira amasomo, imirimo, n’amanota by’ukwezi.',
+                month: 'Ukwezi',
+                present: 'Abitabiriye',
+                absent: 'Abatitabiriye',
+                rate: 'Ijanisha',
+                overall: 'Kwitabira muri rusange',
+                nextAction: 'Ikintu gikurikira',
+                aiTitle: 'AI Advisor',
+                aiSub: 'Inama z’inyongera mu Kinyarwanda no mu Cyongereza.',
+                studentStatus: 'Ariho',
+                authLoginTitle: 'Kwinjira muri kaminuza',
+                authLoginSubtitle: 'Injira ukoresheje imeri na ijambo ry’ibanga.',
+                authCreateTitle: 'Kurema konti',
+                authCreateSubtitle: 'Kora konti yawe ya kaminuza kugira ngo utangire gukurikirana.',
+                authSignin: 'Injira',
+                authSignup: 'Kwandikisha',
+                authGoogle: 'Komeza na Google',
+                authChooseAccount: 'Hitamo konti',
+                authUseAnotherGoogle: 'Koresha andi Google account',
+                authGoogleEnter: 'Andika imeri ya Gmail',
+                authOpenLive: 'Fungura Live',
+                authSignOut: 'Gusohoka'
+            },
+            en: {
+                title: 'Track every university student performance in real time.',
+                subtitle: 'Monitor marks, attendance, course progress, and AI-powered recommendations for each student across the academic year.',
+                buttonPrimary: 'Start tracking',
+                buttonSecondary: 'View report',
+                progressTitle: 'Academic progress',
+                subjectText: 'Course performance',
+                attendanceText: 'Attendance',
+                engagement: 'Engagement',
+                aiText: 'AI suggestions',
+                trend: 'Growth',
+                strong: 'Strong performers',
+                alert: 'Needs attention',
+                profileTitle: 'Profile',
+                profileSub: 'Student information and personal record.',
+                faculty: 'Faculty',
+                year: 'Year',
+                status: 'Status',
+                support: 'Support',
+                accountHead: 'University account',
+                accountText: 'Every student has their own personal data profile and private academic record.',
+                mail: 'Email',
+                phone: 'Phone',
+                coursesTitle: 'Courses',
+                coursesSub: 'Course list and grade overview for the current term.',
+                course: 'Course',
+                code: 'Code',
+                grade: 'Grade',
+                credits: 'Credits',
+                attendanceTitle: 'Attendance',
+                attendanceSub: 'Monthly attendance and learning participation overview.',
+                month: 'Month',
+                present: 'Present',
+                absent: 'Absent',
+                rate: 'Rate',
+                overall: 'Overall attendance',
+                nextAction: 'Next action',
+                aiTitle: 'AI Advisor',
+                aiSub: 'Recommendations in Kinyarwanda and English.',
+                studentStatus: 'Active',
+                authLoginTitle: 'University login',
+                authLoginSubtitle: 'Sign in with your email and password.',
+                authCreateTitle: 'Create account',
+                authCreateSubtitle: 'Create your student account to start tracking.',
+                authSignin: 'Sign in',
+                authSignup: 'Sign up',
+                authGoogle: 'Continue with Google',
+                authChooseAccount: 'Choose an account',
+                authUseAnotherGoogle: 'Use another Google account',
+                authGoogleEnter: 'Enter a Gmail address',
+                authOpenLive: 'Open Live',
+                authSignOut: 'Sign out'
+            }
+        };
+
+        function normalizeAttendanceStatus(record) {
+            if (!record) return false;
+            if (typeof record.present === 'boolean') return record.present;
+            if (typeof record.present === 'string') {
+                return ['present', 'attended', 'yes'].includes(record.present.toLowerCase());
+            }
+            const status = String(record.status || '').toLowerCase();
+            return ['present', 'attended', 'yes'].includes(status);
+        }
+
+        function isDemoGoogleAccountEmail(email) {
+            const normalized = String(email || '').trim().toLowerCase();
+            return normalized === 'user@gmail.com' || normalized === 'school@gmail.com' || /^google\.user\d+@gmail\.com$/i.test(normalized);
+        }
+
+        function normalizeUser(user, fallback = {}) {
+            const safeUser = user && typeof user === 'object' ? user : {};
+            const fallbackCourses = Array.isArray(fallback.courses) ? fallback.courses : [];
+            const fallbackAttendanceRecords = Array.isArray(fallback.attendanceRecords) ? fallback.attendanceRecords : [];
+            const safeCourses = Array.isArray(safeUser.courses) ? safeUser.courses : fallbackCourses.map((course) => ({ ...course }));
+
+            safeUser.courses = safeCourses.map((course) => ({
+                name: course && course.name ? String(course.name) : 'Course',
+                code: course && course.code ? String(course.code) : 'NEW',
+                grade: Number(course && course.grade) || 0,
+                credits: Number(course && course.credits) || 1
+            }));
+
+            safeUser.attendanceRecords = (Array.isArray(safeUser.attendanceRecords) ? safeUser.attendanceRecords : fallbackAttendanceRecords).map((record) => ({
+                date: record && record.date ? String(record.date) : '',
+                course: record && record.course ? String(record.course) : 'Course',
+                period: record && record.period ? String(record.period) : (safeUser.academicPeriod || 'Academic period'),
+                present: normalizeAttendanceStatus(record)
+            }));
+
+            safeUser.id = safeUser.id || fallback.id || 'student_001';
+            safeUser.name = safeUser.name || fallback.name || 'Student';
+            safeUser.faculty = safeUser.faculty || fallback.faculty || 'General Studies';
+            safeUser.year = safeUser.year || fallback.year || '1st Year';
+            safeUser.status = safeUser.status || fallback.status || 'Active';
+            safeUser.phone = safeUser.phone || fallback.phone || '+250 788 000 000';
+            safeUser.email = safeUser.email || fallback.email || 'student@student.univ.rw';
+            safeUser.password = safeUser.password || fallback.password || 'student123';
+            safeUser.profileImage = safeUser.profileImage || fallback.profileImage || '';
+            safeUser.academicPeriod = safeUser.academicPeriod ? String(safeUser.academicPeriod) : 'Academic period';
+            safeUser.taskUploads = Array.isArray(safeUser.taskUploads) ? safeUser.taskUploads.map((task) => ({
+                date: task && task.date ? String(task.date) : '',
+                course: task && task.course ? String(task.course) : 'General',
+                taskName: task && task.taskName ? String(task.taskName) : 'Task',
+                assignmentType: task && task.assignmentType ? String(task.assignmentType) : (task && task.type ? String(task.type) : 'Assignment'),
+                status: task && task.status ? String(task.status) : (task && task.completed ? 'complete' : 'incomplete'),
+                completed: Boolean(task && (task.completed || task.status === 'complete' || task.status === 'Complete')),
+                documentName: task && task.documentName ? String(task.documentName) : 'No document',
+                documentData: task && task.documentData ? String(task.documentData) : '',
+                percentage: Number(task && task.percentage) || 0,
+                overallPercentage: Number(task && task.overallPercentage) || 0,
+                courseOverallPercentage: Number(task && task.courseOverallPercentage) || 0
+            })) : [];
+            safeUser.taskOverallPercentage = Number(safeUser.taskOverallPercentage) || 0;
+            safeUser.scores = safeUser.scores && typeof safeUser.scores === 'object' ? safeUser.scores : {};
+            if (!Object.keys(safeUser.scores).length && safeUser.courses.length) {
+                buildScoresFromCourses(safeUser);
+            }
+
+            safeUser.gpa = Number(safeUser.gpa) || 0;
+            safeUser.attendance = Number(safeUser.attendance) || 0;
+            safeUser.credits = Number(safeUser.credits) || 0;
+            safeUser.aiConversation = Array.isArray(safeUser.aiConversation) ? safeUser.aiConversation.map((msg) => ({
+                role: msg && msg.role === 'user' ? 'user' : 'bot',
+                text: msg && msg.text ? String(msg.text) : ''
+            })) : [];
+            safeUser.advice = safeUser.advice || 'Performance updated successfully.';
+            return safeUser;
+        }
+
+        function isDemoUserProfile(user) {
+            const email = normalizeEmailInput(user && user.email ? user.email : '');
+            const name = (user && user.name ? String(user.name).trim() : '').toLowerCase();
+            return DEMO_ACCOUNT_EMAILS.has(email) || name === 'aline mukiza' || name === 'eric ndayisenga';
+        }
+
+        function purgeDemoAccounts(usersObject) {
+            const cleanedUsers = {};
+            Object.entries(usersObject || {}).forEach(([userId, user]) => {
+                const normalizedUser = normalizeUser(user || {}, {});
+                if (!isDemoGoogleAccountEmail(normalizedUser.email) && !isDemoUserProfile(normalizedUser)) {
+                    cleanedUsers[userId] = normalizedUser;
+                }
+            });
+            return cleanedUsers;
+        }
+
+        function normalizeStore(state) {
+            const base = JSON.parse(JSON.stringify(defaultStore));
+            const safeState = state && typeof state === 'object' ? state : base;
+            const safeUsers = purgeDemoAccounts({ ...base.users, ...(safeState.users || {}) });
+
+            const fallbackUserId = Object.keys(safeUsers)[0] || '';
+            const selectedUserId = safeUsers[safeState.selectedUserId] ? safeState.selectedUserId : fallbackUserId;
+
+            const themeValue = safeState.theme === 'white' || safeState.theme === 'black' || safeState.theme === 'current'
+                ? safeState.theme
+                : 'current';
+
+            return {
+                ...base,
+                ...safeState,
+                isLoggedIn: !!safeState.isLoggedIn,
+                selectedUserId,
+                language: safeState.language === 'en' ? 'en' : 'rw',
+                theme: themeValue,
+                aiApiKey: typeof safeState.aiApiKey === 'string' ? safeState.aiApiKey : '',
+                aiApiModel: typeof safeState.aiApiModel === 'string' && safeState.aiApiModel.trim() ? safeState.aiApiModel.trim() : 'gpt-4o-mini',
+                users: safeUsers
+            };
+        }
+
+        function loadStore() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const base = JSON.parse(JSON.stringify(defaultStore));
+                if (!raw) return normalizeStore(base);
+                const parsed = JSON.parse(raw);
+                const cleaned = normalizeStore(parsed);
+                if (cleaned.users && Object.keys(cleaned.users).length !== Object.keys((parsed.users || {})).length) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+                }
+                return cleaned;
+            } catch (err) {
+                return normalizeStore(JSON.parse(JSON.stringify(defaultStore)));
+            }
+        }
+
+        function saveStore() {
+            const cleanedState = normalizeStore(appState);
+            if (!cleanedState.selectedUserId && cleanedState.users && Object.keys(cleanedState.users).length === 0) {
+                cleanedState.isLoggedIn = false;
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedState));
+        }
+
+        let appState = loadStore();
+        if (!appState || typeof appState !== 'object') {
+            appState = normalizeStore(JSON.parse(JSON.stringify(defaultStore)));
+        }
+        if (!appState.users || typeof appState.users !== 'object') {
+            appState.users = {};
+        }
+
+        function applyTheme(themeName) {
+            const normalizedTheme = themeName === 'white' || themeName === 'black' || themeName === 'current'
+                ? themeName
+                : 'current';
+            appState.theme = normalizedTheme;
+            document.body.setAttribute('data-theme', normalizedTheme);
+            document.querySelectorAll('.theme-btn').forEach((button) => {
+                button.classList.toggle('active', button.dataset.theme === normalizedTheme);
+            });
+            saveStore();
+        }
+
+        function applyAvatarForUser(user) {
+            const avatar = document.getElementById('profileAvatar');
+            if (!avatar) return;
+            const name = (user && user.name) ? user.name : 'Student';
+            const initial = String(name).trim().charAt(0).toUpperCase() || 'S';
+            if (user && user.profileImage) {
+                avatar.innerHTML = `<img src="${user.profileImage}" alt="${name} profile picture">`;
+                return;
+            }
+            avatar.innerHTML = initial;
+        }
+
+        function setAuthMode(mode) {
+            appState.authMode = mode === 'signup' ? 'signup' : 'signin';
+            const tabs = document.querySelectorAll('.login-tab-btn');
+            tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.authMode === appState.authMode));
+            const authTitle = document.getElementById('authTitle');
+            const authSubtitle = document.getElementById('authSubtitle');
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            const confirmField = document.getElementById('confirmPasswordField');
+            const confirmInput = document.getElementById('loginConfirmPassword');
+            if (authTitle) authTitle.textContent = appState.authMode === 'signup' ? translateText('authCreateTitle') : translateText('authLoginTitle');
+            if (authSubtitle) authSubtitle.textContent = appState.authMode === 'signup' ? translateText('authCreateSubtitle') : translateText('authLoginSubtitle');
+            if (submitBtn) submitBtn.textContent = appState.authMode === 'signup' ? translateText('authSignup') : translateText('authSignin');
+            if (confirmField) confirmField.style.display = appState.authMode === 'signup' ? 'block' : 'none';
+            if (confirmInput) confirmInput.value = '';
+            const errorBox = document.getElementById('loginError');
+            if (errorBox) errorBox.textContent = '';
+        }
+
+        function isValidLogin(email, password) {
+            const normalizedEmail = normalizeEmailInput(email);
+            const normalizedPassword = String(password || '').trim();
+            const user = Object.values(appState.users).find((entry) => {
+                const normalizedEntry = normalizeUser(entry, defaultStore.users[entry.id] || {});
+                return normalizeEmailInput(normalizedEntry.email) === normalizedEmail && (normalizedEntry.password || '').trim() === normalizedPassword;
+            });
+            if (!user) return false;
+            appState.selectedUserId = user.id;
+            appState.isLoggedIn = true;
+            saveStore();
+            return true;
+        }
+
+        function createAccount(email, password) {
+            if (!appState || typeof appState !== 'object') {
+                appState = normalizeStore(JSON.parse(JSON.stringify(defaultStore)));
+            }
+            if (!appState.users || typeof appState.users !== 'object') {
+                appState.users = {};
+            }
+
+            const trimmedEmail = normalizeEmailInput(email);
+            const existing = Object.values(appState.users).find((user) => normalizeEmailInput(user.email) === trimmedEmail);
+            if (existing) return { ok: false, message: 'An account with this email already exists. Please sign in instead.' };
+
+            const count = Object.keys(appState.users).length + 1;
+            const newId = `student_${String(count).padStart(3, '0')}`;
+            const name = trimmedEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+            const newUser = {
+                id: newId,
+                name: name || `Student ${count}`,
+                faculty: 'General Studies',
+                year: '1st Year',
+                status: 'Active',
+                phone: '+250 788 000 0' + count,
+                email: trimmedEmail,
+                password: String(password || '').trim(),
+                profileImage: '',
+                gpa: 0,
+                attendance: 0,
+                credits: 0,
+                scores: {},
+                courses: [],
+                attendanceRecords: [],
+                taskUploads: [],
+                taskOverallPercentage: 0,
+                advice: 'Welcome! Your new student profile has been created.'
+            };
+            appState.users[newId] = newUser;
+            appState.selectedUserId = newId;
+            appState.isLoggedIn = true;
+            appState.authMode = 'signin';
+            saveStore();
+            return { ok: true, user: newUser };
+        }
+
+        function normalizeEmailInput(value) {
+            return String(value || '').trim().replace(/\s+/g, '').toLowerCase();
+        }
+
+        function sanitizeEmailField(input) {
+            if (!input) return;
+            const normalizeCurrentValue = () => {
+                const cleaned = normalizeEmailInput(input.value);
+                if (input.value !== cleaned) input.value = cleaned;
+            };
+            input.addEventListener('input', normalizeCurrentValue);
+            input.addEventListener('blur', normalizeCurrentValue);
+            normalizeCurrentValue();
+        }
+
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            if (!appState || typeof appState !== 'object') {
+                appState = normalizeStore(JSON.parse(JSON.stringify(defaultStore)));
+            }
+            if (!appState.users || typeof appState.users !== 'object') {
+                appState.users = {};
+            }
+
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+            const confirmInput = document.getElementById('loginConfirmPassword');
+            const errorBox = document.getElementById('loginError');
+            if (!emailInput || !passwordInput || !errorBox) return;
+
+            const email = normalizeEmailInput(emailInput.value);
+            const password = passwordInput.value.trim();
+            const mode = appState.authMode === 'signup' ? 'signup' : 'signin';
+            if (emailInput) emailInput.value = email;
+
+            if (!email || !password) {
+                errorBox.textContent = 'Please enter your email and password.';
+                return;
+            }
+
+            if (mode === 'signup') {
+                const confirm = (confirmInput && confirmInput.value.trim()) || '';
+                if (password.length < 6) {
+                    errorBox.textContent = 'Password must be at least 6 characters.';
+                    return;
+                }
+                if (password !== confirm) {
+                    errorBox.textContent = 'Passwords do not match.';
+                    return;
+                }
+                const result = createAccount(email, password);
+                if (!result.ok) {
+                    errorBox.textContent = result.message;
+                    return;
+                }
+            } else if (!isValidLogin(email, password)) {
+                errorBox.textContent = 'Invalid email or password. Please try again.';
+                return;
+            }
+
+            errorBox.textContent = '';
+            passwordInput.value = '';
+            if (confirmInput) confirmInput.value = '';
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            appState.isLoggedIn = true;
+            saveStore();
+            updateLanguageUI();
+            renderDashboard();
+        }
+
+        function renderGoogleChooser() {
+            const chooser = document.getElementById('googleChooser');
+            if (!chooser) return;
+
+            const googleAccounts = Object.values(appState.users)
+                .map((user) => (user.email || '').trim())
+                .filter((email) => /@(gmail\.com|googlemail\.com)$/i.test(email))
+                .slice(0, 6);
+
+            const choices = googleAccounts;
+            chooser.innerHTML = `
+                <div style="margin-bottom:8px; font-weight:700;">${translateText('authChooseAccount')}</div>
+                ${choices.length ? choices.map((email) => `
+                    <button type="button" class="account-option" data-google-email="${email}">
+                        <strong>${email}</strong>
+                        <span>${translateText('authSignin')}</span>
+                    </button>
+                `).join('') : '<div class="account-option empty-state" style="cursor:default; opacity:0.8;">No Google accounts available yet.</div>'}
+                <button type="button" class="account-option" data-google-email="custom">
+                    <strong>${translateText('authUseAnotherGoogle')}</strong>
+                    <span>${translateText('authGoogleEnter')}</span>
+                </button>
+            `;
+
+            chooser.querySelectorAll('[data-google-email]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const selectedEmail = button.dataset.googleEmail;
+                    const googleEmailInput = document.getElementById('googleEmailInput');
+                    const errorBox = document.getElementById('loginError');
+
+                    if (selectedEmail === 'custom') {
+                        if (errorBox) errorBox.textContent = 'Enter a valid Gmail address below and then continue.';
+                        chooser.classList.remove('visible');
+                        const googleField = document.getElementById('googleEmailField');
+                        if (googleField) googleField.style.display = 'block';
+                        if (googleEmailInput) googleEmailInput.focus();
+                        return;
+                    }
+
+                    if (googleEmailInput) googleEmailInput.value = selectedEmail;
+                    if (errorBox) errorBox.textContent = '';
+                    chooser.classList.remove('visible');
+                    handleGoogleLogin(selectedEmail);
+                });
+            });
+        }
+
+        function handleGoogleLogin(selectedEmail = '') {
+            const errorBox = document.getElementById('loginError');
+            const googleEmailInput = document.getElementById('googleEmailInput');
+            const rawGoogleEmail = normalizeEmailInput(selectedEmail || (googleEmailInput ? googleEmailInput.value : ''));
+            const googleEmail = rawGoogleEmail.trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const allowedDomain = /@(gmail\.com|googlemail\.com)$/i;
+
+            if (!googleEmail || !emailPattern.test(googleEmail) || !allowedDomain.test(googleEmail)) {
+                if (errorBox) errorBox.textContent = 'Please choose a Google account or enter a valid Gmail address.';
+                if (googleEmailInput) {
+                    const googleField = document.getElementById('googleEmailField');
+                    if (googleField) googleField.style.display = 'block';
+                    googleEmailInput.value = googleEmail;
+                    googleEmailInput.focus();
+                }
+                return;
+            }
+
+            if (googleEmailInput) googleEmailInput.value = googleEmail;
+            if (errorBox) errorBox.textContent = '';
+            const matched = Object.values(appState.users).find((user) => (user.email || '').toLowerCase() === googleEmail.toLowerCase());
+            if (matched) {
+                appState.selectedUserId = matched.id;
+                appState.isLoggedIn = true;
+                saveStore();
+            } else {
+                const result = createAccount(googleEmail, 'google123');
+                if (!result.ok) {
+                    if (errorBox) errorBox.textContent = result.message;
+                    return;
+                }
+            }
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            if (googleEmailInput) googleEmailInput.value = '';
+            updateLanguageUI();
+            renderDashboard();
+        }
+
+        function handleLogout() {
+            appState.isLoggedIn = false;
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            const loginEmail = document.getElementById('loginEmail');
+            const loginPassword = document.getElementById('loginPassword');
+            const loginError = document.getElementById('loginError');
+            if (loginEmail) loginEmail.value = '';
+            if (loginPassword) loginPassword.value = '';
+            if (loginError) loginError.textContent = '';
+            saveStore();
+        }
+
+        function currentUser() {
+            const availableUsers = Object.values(appState.users).filter((user) => user && user.id);
+            const selectedUser = appState.users[appState.selectedUserId] || availableUsers[0];
+            if (!selectedUser || !selectedUser.id) {
+                const fallbackUser = {
+                    id: 'student_001',
+                    name: 'Student',
+                    faculty: 'General Studies',
+                    year: '1st Year',
+                    status: 'Active',
+                    phone: '',
+                    email: '',
+                    password: '',
+                    profileImage: '',
+                    gpa: 0,
+                    attendance: 0,
+                    credits: 0,
+                    scores: {},
+                    courses: [],
+                    attendanceRecords: [],
+                    taskUploads: [],
+                    taskOverallPercentage: 0,
+                    advice: 'No profile selected yet.'
+                };
+                return normalizeUser(fallbackUser, {});
+            }
+
+            appState.selectedUserId = selectedUser.id;
+            return normalizeUser(selectedUser, {});
+        }
+
+        function translateText(key) {
+            return translations[appState.language][key] || key;
+        }
+
+        function renderUserSwitcher() {
+            const list = document.getElementById('studentList');
+            if (!list) return;
+
+            const userEntries = Object.values(appState.users).filter((user) => user && user.id && (user.email || user.name || user.faculty));
+            if (!userEntries.length) {
+                list.innerHTML = '<li class="student-item empty"><span>No student profile yet. Create one from the profile section.</span></li>';
+                return;
+            }
+
+            list.innerHTML = userEntries.map((user) => `
+                <li class="student-item ${user.id === appState.selectedUserId ? 'selected' : ''}">
+                    <div class="student-meta">
+                        <strong>${user.name}</strong>
+                        <span>${user.faculty}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" class="btn btn-secondary" data-user-id="${user.id}">Open</button>
+                        <button type="button" class="btn btn-danger" data-delete-user-id="${user.id}">Delete</button>
+                    </div>
+                </li>
+            `).join('');
+
+            list.querySelectorAll('[data-user-id]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    appState.selectedUserId = button.dataset.userId;
+                    saveStore();
+                    updateLanguageUI();
+                    renderDashboard();
+                });
+            });
+
+            list.querySelectorAll('[data-delete-user-id]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const userId = button.dataset.deleteUserId;
+                    if (Object.keys(appState.users).length <= 1) {
+                        alert('At least one profile must remain in the system.');
+                        return;
+                    }
+                    delete appState.users[userId];
+                    const remainingIds = Object.keys(appState.users);
+                    appState.selectedUserId = remainingIds[0];
+                    saveStore();
+                    updateLanguageUI();
+                    renderDashboard();
+                });
+            });
+        }
+
+        function populateProfileForm() {
+            const user = currentUser();
+            const profileNameInput = document.getElementById('profileNameInput');
+            const profileFacultyInput = document.getElementById('profileFacultyInput');
+            const profileYearInput = document.getElementById('profileYearInput');
+            const profileStatusInput = document.getElementById('profileStatusInput');
+            const profileEmailInput = document.getElementById('profileEmailInput');
+            const profilePasswordInput = document.getElementById('profilePasswordInput');
+            const profilePhoneInput = document.getElementById('profilePhoneInput');
+            const profileImageInput = document.getElementById('profileImageInput');
+
+            if (!profileNameInput) return;
+            profileNameInput.value = user.name || '';
+            profileFacultyInput.value = user.faculty || '';
+            profileYearInput.value = user.year || '';
+            profileStatusInput.value = user.status || '';
+            profileEmailInput.value = normalizeEmailInput(user.email || '');
+            profilePasswordInput.value = user.password || '';
+            profilePhoneInput.value = user.phone || '';
+            if (profileImageInput) profileImageInput.value = '';
+            applyAvatarForUser(user);
+        }
+
+        function handleProfileSave(event) {
+            event.preventDefault();
+            const user = currentUser();
+            const name = document.getElementById('profileNameInput').value.trim();
+            const faculty = document.getElementById('profileFacultyInput').value.trim();
+            const year = document.getElementById('profileYearInput').value.trim();
+            const status = document.getElementById('profileStatusInput').value.trim();
+            const emailInput = document.getElementById('profileEmailInput');
+            const email = normalizeEmailInput(emailInput ? emailInput.value : '');
+            const password = document.getElementById('profilePasswordInput').value.trim();
+            const phone = document.getElementById('profilePhoneInput').value.trim();
+            const imageInput = document.getElementById('profileImageInput');
+
+            if (emailInput) emailInput.value = email;
+            if (!name || !faculty || !year || !status || !email || !password || !phone) return;
+
+            const duplicateUser = Object.values(appState.users).find((entry) => entry && entry.id !== user.id && normalizeEmailInput(entry.email) === email);
+            if (duplicateUser) {
+                alert('This email is already registered to another profile. Please choose a different email.');
+                return;
+            }
+
+            const persistProfile = (imageValue) => {
+                user.name = name;
+                user.faculty = faculty;
+                user.year = year;
+                user.status = status;
+                user.email = email;
+                user.password = password;
+                user.phone = phone;
+                if (typeof imageValue === 'string') {
+                    user.profileImage = imageValue;
+                }
+                user.advice = appState.language === 'rw'
+                    ? `Umwirondoro wa ${name} wahindutse neza.`
+                    : `Profile data for ${name} has been updated successfully.`;
+
+                saveStore();
+                updateLanguageUI();
+                renderDashboard();
+            };
+
+            if (imageInput && imageInput.files && imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = () => persistProfile(reader.result);
+                reader.readAsDataURL(imageInput.files[0]);
+                return;
+            }
+
+            persistProfile(user.profileImage || '');
+        }
+
+        function deleteSelectedProfile() {
+            const ids = Object.keys(appState.users);
+            if (ids.length <= 1) {
+                alert('At least one profile must remain in the system.');
+                return;
+            }
+            delete appState.users[appState.selectedUserId];
+            const remainingIds = Object.keys(appState.users);
+            appState.selectedUserId = remainingIds[0] || defaultStore.selectedUserId;
+            saveStore();
+            updateLanguageUI();
+            renderDashboard();
+        }
+
+        function addStudentProfile() {
+            const count = Object.keys(appState.users).length + 1;
+            const newId = `student_${String(count).padStart(3, '0')}`;
+            const newUser = {
+                id: newId,
+                name: `Student ${count}`,
+                faculty: 'General Studies',
+                year: '1st Year',
+                status: 'Active',
+                phone: '+250 788 000 0' + count,
+                email: `student${count}@student.univ.rw`,
+                password: 'student123',
+                profileImage: '',
+                gpa: 0,
+                attendance: 0,
+                credits: 0,
+                scores: {},
+                courses: [],
+                advice: 'New student profile created.'
+            };
+
+            appState.users[newId] = newUser;
+            appState.selectedUserId = newId;
+            saveStore();
+            updateLanguageUI();
+            renderDashboard();
+        }
+
+        function setText(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        }
+
+        function updateLanguageUI() {
+            document.querySelectorAll('.lang-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.lang === appState.language);
+            });
+
+            const loginTabButtons = document.querySelectorAll('.login-tab-btn');
+            loginTabButtons.forEach((button) => {
+                const label = button.dataset.authMode === 'signup' ? translateText('authSignup') : translateText('authSignin');
+                button.textContent = label;
+            });
+
+            const logoutButton = document.getElementById('logoutBtn');
+            if (logoutButton) logoutButton.textContent = translateText('authSignOut');
+
+            const openLiveButton = document.getElementById('openLiveBtn');
+            if (openLiveButton) openLiveButton.textContent = translateText('authOpenLive');
+
+            const googleLoginBtn = document.getElementById('googleLoginBtn');
+            if (googleLoginBtn) googleLoginBtn.textContent = translateText('authGoogle');
+
+            const user = currentUser();
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) {
+                overlay.classList.toggle('hidden', appState.isLoggedIn);
+            }
+
+            setText('mainTitle', translateText('title'));
+            setText('mainSubtitle', translateText('subtitle'));
+            setText('ctaPrimary', translateText('buttonPrimary'));
+            setText('ctaSecondary', translateText('buttonSecondary'));
+            setText('progressTitle', translateText('progressTitle'));
+            setText('subjectScoreText', translateText('subjectText'));
+            setText('attendanceProgressText', translateText('attendanceText'));
+            setText('engagementText', translateText('engagement'));
+            setText('aiText', translateText('aiText'));
+            setText('trendLabel', translateText('trend'));
+            setText('strongLabel', translateText('strong'));
+            setText('alertLabel', translateText('alert'));
+            setText('profileTitle', translateText('profileTitle'));
+            setText('profileSub', translateText('profileSub'));
+            setText('facultyLabel', translateText('faculty'));
+            setText('yearLabel', translateText('year'));
+            setText('statusLabel', translateText('status'));
+            setText('supportLabel', translateText('support'));
+            setText('accountHead', translateText('accountHead'));
+            setText('accountText', translateText('accountText'));
+            setText('mailLabel', translateText('mail'));
+            setText('phoneLabel', translateText('phone'));
+            setText('coursesTitle', translateText('coursesTitle'));
+            setText('coursesSub', translateText('coursesSub'));
+            setText('courseCol', translateText('course'));
+            setText('codeCol', translateText('code'));
+            setText('gradeCol', translateText('grade'));
+            setText('creditsCol', translateText('credits'));
+            setText('attendanceTitle', translateText('attendanceTitle'));
+            setText('attendanceSub', translateText('attendanceSub'));
+            setText('monthCol', translateText('month'));
+            setText('presentCol', translateText('present'));
+            setText('absentCol', translateText('absent'));
+            setText('rateCol', translateText('rate'));
+            setText('overallLabel', translateText('overall'));
+            setText('nextStepLabel', translateText('nextAction'));
+            const periodLabel = document.getElementById('activeAcademicPeriodValue');
+            if (periodLabel) periodLabel.textContent = user.academicPeriod || 'Academic period';
+            setText('aiTitle', translateText('aiTitle'));
+            setText('aiSub', translateText('aiSub'));
+            setText('studentStatus', translateText('studentStatus'));
+
+            setText('profileName', user.name);
+            setText('profileRole', 'Student');
+            applyAvatarForUser(user);
+            setText('profileFacultyValue', user.faculty);
+            setText('profileYearValue', user.year);
+            setText('profileEmailValue', user.email);
+            setText('profilePhoneValue', user.phone);
+            setText('gpaValue', user.gpa.toFixed(1));
+            setText('attendanceValue', user.attendance + '%');
+            setText('creditsValue', String(user.credits));
+            renderUserSwitcher();
+            populateProfileForm();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getAIResponseForPrompt(user, prompt) {
+            const text = String(prompt || '').trim();
+            const lowerText = text.toLowerCase();
+            const gpa = Number(user.gpa) || 0;
+            const attendance = Number(user.attendance) || 0;
+            const courses = Array.isArray(user.courses) ? user.courses : [];
+            const taskUploads = Array.isArray(user.taskUploads) ? user.taskUploads : [];
+            const attendanceRecords = Array.isArray(user.attendanceRecords) ? user.attendanceRecords : [];
+            const weakCourse = getWeakestCourse(user);
+            const bestCourse = courses.length
+                ? courses.reduce((best, current) => Number(current.grade || 0) > Number(best.grade || 0) ? current : best, courses[0])
+                : null;
+            const courseCount = courses.length;
+            const taskCount = taskUploads.length;
+            const presentCount = attendanceRecords.filter((record) => normalizeAttendanceStatus(record)).length;
+            const totalMarks = courses.reduce((sum, course) => sum + Number(course.grade || 0), 0);
+            const averageCourseGrade = courses.length ? totalMarks / courses.length : 0;
+            const recentMessages = Array.isArray(user.aiConversation) ? user.aiConversation.slice(-4).map((entry) => entry.text || '').join(' ') : '';
+            const courseSummary = courses.length
+                ? courses.map((course) => `${course.name} (${Number(course.grade || 0)}%)`).join(', ')
+                : 'No course data yet';
+            const taskSummary = taskUploads.length
+                ? taskUploads.map((task) => `${task.taskName || 'Task'} (${task.course || 'Course'}: ${Number(task.mark ?? task.percentage ?? 0)}%)`).join('; ')
+                : 'No task records yet';
+            const attendanceSummary = attendanceRecords.length
+                ? `${presentCount}/${attendanceRecords.length} present`
+                : 'No attendance records yet';
+
+            const researchNote = [
+                `GPA: ${gpa.toFixed(1)}`,
+                `Attendance: ${attendance.toFixed(0)}%`,
+                `Courses: ${courseSummary}`,
+                `Tasks: ${taskSummary}`,
+                `Attendance log: ${attendanceSummary}`,
+                `Weak subject: ${weakCourse}`
+            ].join(' | ');
+
+            const detailedBase = appState.language === 'rw'
+                ? `Nakoze ubushakashatsi ku makuru yawe ya akademi. GPA yawe ni ${gpa.toFixed(1)}, kwitabira amasomo ni ${attendance.toFixed(0)}%, ufite amasomo ${courseCount}, tugas ${taskCount}, kandi ${weakCourse} ni ryo somo rikenewe cyane. Ibyo data yerekana ni uko: ${courseSummary}. Ibyo wakora byihutirwa ni ukujya ku masomo y’ingenzi, gushyira imbere ${weakCourse}, no gukomeza kubika ibimenyetso by’amasomo kandi gusubiramo ibibazo. Ibi byose bigasubira mu ngamba z’ukwezi: gutegura gahunda yo kwiga, kubona amahirwe yo kwigira, no kwitabira amasomo buri munsi kugira ngo ushyire mu gaciro GPA yawe. Nshobora kukubaza ikibazo kirekire kirambuye kuri GPA, kwitabira, amasomo, tugas, cyangwa gahunda yo kwiga.`
+                : `I reviewed your academic records in detail. Your GPA is ${gpa.toFixed(1)}, attendance is ${attendance.toFixed(0)}%, you have ${courseCount} courses recorded, ${taskCount} task records, and your main focus area is ${weakCourse}. The data shows that your current academic performance is ${courseSummary}. The strongest next step is to devote extra practice time to ${weakCourse}, keep your attendance steady, and stay consistent with revision and assignment deadlines. In other words, your success depends on a clear study rhythm: short daily review, focused practice, and regular follow-up on weak topics. I can also give you a deeper explanation about GPA, attendance, coursework, tasks, or your study plan.`;
+
+            if (!text) {
+                return detailedBase;
+            }
+
+            const lower = lowerText.trim();
+            const toldContext = recentMessages ? `I also considered your earlier chat: ${recentMessages}` : 'This is based on your current records only.';
+
+            if (/hello|hi|hey|good morning|good afternoon|good evening/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Muraho! Nakoze ubushakashatsi ku makuru yawe. GPA yawe ni ${gpa.toFixed(1)}, kwitabira amasomo ni ${attendance.toFixed(0)}%, kandi ufite amasomo ${courseCount}. ${toldContext}. Ibyo data yerekana ni uko: ${courseSummary}. Ibyo ukwiye kwibanda ku byo ni ${weakCourse}, kwitabira amasomo yose, no kugenzura ibitabo by’amasomo buri gihe.`
+                    : `Hello! I reviewed your academic record in detail. Your GPA is ${gpa.toFixed(1)}, attendance is ${attendance.toFixed(0)}%, and you have ${courseCount} courses recorded. ${toldContext}. The data currently shows: ${courseSummary}. Your main priority is ${weakCourse}, alongside keeping attendance stable and maintaining regular revision across all courses.`;
+            }
+
+            if (/gpa|grade point|average|overall performance|progress/.test(lower)) {
+                const strongest = bestCourse ? `${bestCourse.name} at ${bestCourse.grade}%` : 'No course data yet';
+                return appState.language === 'rw'
+                    ? `Nakoze isesengura ryimbitse rya GPA yawe. GPA ni ${gpa.toFixed(1)}; ikigereranyo cy’amasomo ni ${averageCourseGrade.toFixed(0)}%; isomo rikomeye ni ${strongest}; ikisubirwamo ni ${weakCourse}. Ibi bivuze ko ubuzima bwawe bw’ubuhanga bumeze neza, ariko hari amasomo akenewe. Ikintu cy’ingenzi ni ukugira gahunda yo kwiga ibihe byihariye ku ${weakCourse}, kugira ngo GPA igere ku rwego rukomeye mu gihe gito. Izo gahunda ziba zirimo gukoresha iminota 30–45 ku munsi, gukora imyitozo, no gusubiramo amakosa buri cyumweru.`
+                    : `I reviewed your GPA in detail. Your GPA is ${gpa.toFixed(1)}, your average course mark is ${averageCourseGrade.toFixed(0)}%, your strongest course is ${strongest}, and your weakest area is ${weakCourse}. This means your academic record is generally solid, but your improvement focus should be on ${weakCourse}. The most effective approach is a daily study block of 30–45 minutes, repeated practice, and review of mistakes so that performance improves gradually and consistently.`;
+            }
+
+            if (/attendance|present|absent|class|lecture|tutorial/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Nakoze isesengura ryimbitse ry’kwitabira amasomo. Kwitabira amasomo ni ${attendance.toFixed(0)}% (${attendanceSummary}). Ibi bivuze ko ufite ubushobozi bwiza, ariko ugomba gushimangira ibisubizo by’amasomo, cyane cyane mu masomo akurikira ${weakCourse}. Kwigirira akamaro ni ukwitabira amasomo yose, kubahiriza gahunda, no kwibuka ko kwitabira ibitabo bitabite weza GPA ndetse no kumva ibitabo neza.`
+                    : `I reviewed your attendance record in detail. Your attendance is ${attendance.toFixed(0)}% (${attendanceSummary}). That is a good foundation, but to keep improving you should focus on being present for the classes that matter most, especially ${weakCourse}. Regular attendance improves understanding, supports task completion, and prevents the academic gap that builds up when classes are missed.`;
+            }
+
+            if (/weak|improve|struggle|difficulty|lowest|bad|need help|help/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Ishakiro rya data ryanjye ryerekana ko ${weakCourse} ari ryo isomo rikenewe cyane. Uyu niwo mugongo w’inyongeramusaruro yawe ku gihe gito. Inzira ikora ni ukujya ukora imyitozo buri munsi, gufata nota, gusubiramo ibibazo byasuzumwe, no kubaza ibibazo byabuzwa mu masomo. Wabasha guhitamo amasaha 30–45 ku munsi, ukore ibyo byigisho mu buryo bugoye buteye imbere, kandi ukajya ushyira $ic$${weakCourse} mu nteko y’ukwezi. Ibi bizatuma ${weakCourse} ihinduka isomo gishimishije.`
+                    : `I reviewed your records and ${weakCourse} appears to be the main area that needs focused improvement. This is the clearest opportunity to raise your overall performance because it is the course pulling your average down most. A strong improvement plan is to set aside 30–45 minutes each day for focused revision, solve practice questions, review your mistakes carefully, and attend extra support sessions when a topic feels unclear. In addition, keep your attendance stable and complete assignments on time, because both habits directly improve understanding and confidence. If you follow this routine consistently for several weeks, ${weakCourse} should begin to improve noticeably, and your GPA will become more stable as a result.`;
+            }
+
+            if (/course|subject|module|which course|which subject/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Ibyanditswe mu masomo yawe ni: ${courseSummary}. Icyo ukwiye kwibanda ku cyo ni ${weakCourse}, kandi ukomeza gushimangira amasomo akomeye nka ${bestCourse ? bestCourse.name : 'your strongest course'}. Ukoreshe iyi nyandiko nk’inyandiko y’imyitozo: agaruka ku masomo akomeye, ugire gahunda yo kwiga, kandi utange nimyitozo ku masomo ak weakest.`
+                    : `Your recorded courses are: ${courseSummary}. The most important area to improve is ${weakCourse}, while your strongest course currently remains ${bestCourse ? bestCourse.name : 'your strongest course'}. The best strategy is to keep building on your strongest subjects while reserving extra revision time for your weak area.`;
+            }
+
+            if (/task|assignment|upload|document|mark|submission/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Nakoze isesengura ry’imyitozo y’ibikorwa. ${taskSummary}. Ibi birerekana ingamba z’ingenzi: ukomeze kubika ibyakozwe neza, uhare amahirwe y’ibikorwa byagabanijwe, no guha ibibanza byihariye ku tugas zifite amanota make. Gukoresha gahunda ishyirwaho ku isomwe amahirwe ukoresheje iyi gahunda bizagabanya ibibazo by’imyitozo.`
+                    : `I reviewed your task and assignment data. ${taskSummary}. The key lesson is that your strongest tasks are the ones delivered consistently, while the weaker ones need targeted revision and better time management. If you prioritize tasks with lower marks and submit them earlier, your overall quality and academic confidence will improve.`;
+            }
+
+            if (/study|plan|strategy|schedule|time/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Gahunda yo kwiga yihuta: 20 min gusubira ku byigijwe, 30 min gukora imyitozo, 15 min kureba amakosa, 10 min gutegura ibizamini, no kwibanda cyane ku ${weakCourse}. Iyi gahunda igaragara iboneye kubera ko ibimenyetso byawe byerekana ko ufite ubushobozi buto, ariko bikanasaba guhuza kwiga no kwitabira. Nta kintu gishobora kugera ku ntego iboneye mu gihe utabanje kugira gahunda.`
+                    : `A strong study plan is: 20 minutes of review, 30 minutes of practice, 15 minutes of correction, 10 minutes of test preparation, and a strong focus on ${weakCourse}. This fits your current profile because your data shows a healthy base with room for improvement. The key is consistency, not intensity alone.`;
+            }
+
+            if (/summary|overview|tell me about me|who am i|what do you know/.test(lower)) {
+                return appState.language === 'rw'
+                    ? `Nakoze isesengura ryimbitse ry’imiturire yawe. GPA ni ${gpa.toFixed(1)}, kwitabira amasomo ni ${attendance.toFixed(0)}%, ufite amasomo ${courseCount}, tugas ${taskCount}, kandi ${weakCourse} ni cyo isomo gikenewe. ${researchNote}. Ibi bivuze ko ufite inyungu z’iterambere ryawe, ariko ko kugenzura ibibazo by’imyigire byihariye bizafasha kubona intego y’ukwezi.`
+                    : `I reviewed your full academic profile. Your GPA is ${gpa.toFixed(1)}, attendance is ${attendance.toFixed(0)}%, you have ${courseCount} courses, ${taskCount} task records, and your main focus area is ${weakCourse}. ${researchNote}. This means you are academically capable, but your next improvement step should be to target the weak area with structured revision and strong daily study habits.`;
+            }
+
+            return appState.language === 'rw'
+                ? `Nakoze ubushakashatsi ku makuru yawe ya akademi, kandi data yerekana ko ${weakCourse} ari cyo gisubizwa cyane. Ubu buryo bwiza ni ugukomeza kwitabira amasomo, gukomeza kubika imyitozo, no gutegura gahunda yo kwiga ibingana neza. Ukoreshe ibibazo byawe byihariye, nk’GPA, kwitabira, amasomo, tugas, cyangwa gahunda yo kwiga, kandi nzaguhaza kumutekero ku buryo burambuye.`
+                : `I reviewed your academic data carefully, and the main pattern is that ${weakCourse} is the area most in need of attention. The best improvement strategy is to keep attendance stable, maintain consistent revision, and dedicate extra weekly practice to the weaker subjects. In practice, that means reviewing notes every day, prioritizing the lowest-performing course, completing assignments on time, and checking whether your study schedule is realistic. If you ask a specific question about GPA, attendance, your courses, tasks, or your study plan, I can give you a fuller explanation based on your actual records and turn it into a clear action plan.`;
+        }
+
+        function renderAIChat(user) {
+            const container = document.getElementById('aiChatMessages');
+            if (!container) return;
+
+            const messages = Array.isArray(user.aiConversation) && user.aiConversation.length
+                ? user.aiConversation
+                : [{ role: 'bot', text: getAIResponseForPrompt(user, 'hello') }];
+
+            user.aiConversation = messages;
+            container.innerHTML = messages.map((message, index) => {
+                const isUserMessage = message.role === 'user';
+                const isEditing = !!message.editing && isUserMessage;
+
+                return `
+                    <div class="ai-message ${isUserMessage ? 'user' : 'bot'}">
+                        ${isEditing ? `
+                            <textarea class="ai-message-editor" data-message-index="${index}" data-message-editor="true">${escapeHtml(message.text)}</textarea>
+                            <div class="ai-message-actions">
+                                <button type="button" class="ai-message-action" data-message-index="${index}" data-message-action="save-edit">Save</button>
+                                <button type="button" class="ai-message-action" data-message-index="${index}" data-message-action="cancel-edit">Cancel</button>
+                            </div>
+                        ` : `
+                            <div>${escapeHtml(message.text)}</div>
+                            <div class="ai-message-actions">
+                                ${isUserMessage ? `<button type="button" class="ai-message-action" data-message-index="${index}" data-message-action="edit">Edit</button>` : ''}
+                                <button type="button" class="ai-message-action delete" data-message-index="${index}" data-message-action="delete">Delete</button>
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleAIMessageAction(event) {
+            const button = event.target.closest('[data-message-action]');
+            if (!button) return;
+
+            const user = currentUser();
+            const index = Number(button.dataset.messageIndex);
+            if (!Array.isArray(user.aiConversation) || Number.isNaN(index) || index < 0 || index >= user.aiConversation.length) return;
+
+            const action = button.dataset.messageAction;
+            const currentMessage = user.aiConversation[index];
+
+            if (action === 'delete') {
+                user.aiConversation.splice(index, 1);
+                if (!user.aiConversation.length) {
+                    user.aiConversation.push({ role: 'bot', text: getAIResponseForPrompt(user, 'hello') });
+                }
+                renderAIChat(user);
+                saveStore();
+                return;
+            }
+
+            if (action === 'edit') {
+                if (currentMessage.role !== 'user') {
+                    return;
+                }
+                currentMessage.editing = true;
+                renderAIChat(user);
+                return;
+            }
+
+            if (action === 'cancel-edit') {
+                if (currentMessage.role === 'user') {
+                    delete currentMessage.editing;
+                }
+                renderAIChat(user);
+                return;
+            }
+
+            if (action === 'save-edit') {
+                if (currentMessage.role !== 'user') {
+                    return;
+                }
+
+                const editor = event.target.closest('.ai-message')?.querySelector('.ai-message-editor');
+                const nextText = (editor ? editor.value : (currentMessage.text || '')).trim();
+                delete currentMessage.editing;
+
+                if (!nextText) {
+                    user.aiConversation.splice(index, 1);
+                    if (!user.aiConversation.length) {
+                        user.aiConversation.push({ role: 'bot', text: getAIResponseForPrompt(user, 'hello') });
+                    }
+                } else {
+                    currentMessage.text = nextText;
+                }
+
+                renderAIChat(user);
+                saveStore();
+            }
+        }
+
+        function buildAIGroundingContext(user) {
+            const courses = Array.isArray(user.courses) ? user.courses : [];
+            const taskUploads = Array.isArray(user.taskUploads) ? user.taskUploads : [];
+            const attendanceRecords = Array.isArray(user.attendanceRecords) ? user.attendanceRecords : [];
+
+            return {
+                student: {
+                    name: user.name || 'Student',
+                    faculty: user.faculty || 'General Studies',
+                    year: user.year || '1st Year',
+                    gpa: Number(user.gpa) || 0,
+                    attendance: Number(user.attendance) || 0,
+                    courses: courses.map((course) => ({
+                        name: course.name,
+                        grade: Number(course.grade) || 0,
+                        credits: Number(course.credits) || 0
+                    })),
+                    tasks: taskUploads.map((task) => ({
+                        course: task.course || 'General',
+                        taskName: task.taskName || 'Task',
+                        mark: Number(task.mark ?? task.percentage ?? 0) || 0,
+                        documentName: task.documentName || 'No document'
+                    })),
+                    attendanceLog: attendanceRecords.map((record) => ({
+                        course: record.course || 'General',
+                        present: normalizeAttendanceStatus(record)
+                    }))
+                }
+            };
+        }
+
+        async function callRealAIModel(user, prompt) {
+            const apiKey = (appState.aiApiKey || '').trim();
+            const model = (appState.aiApiModel || 'gpt-4o-mini').trim();
+            if (!apiKey) {
+                return null;
+            }
+
+            const context = buildAIGroundingContext(user);
+            const endpoint = 'https://api.openai.com/v1/chat/completions';
+            const payload = {
+                model,
+                temperature: 0.8,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a university academic advisor. Use the student data in the JSON context to answer questions accurately and kindly. If information is missing, say so. Do not invent facts. Keep advice practical and academic. Give a full, detailed explanation, not a brief one-line answer. Structure the response with clear analysis, reasoning, and a concrete action plan when relevant.'
+                    },
+                    {
+                        role: 'user',
+                        content: JSON.stringify({
+                            request: prompt,
+                            context
+                        })
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`AI request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data?.choices?.[0]?.message?.content?.trim() || null;
+            } catch (error) {
+                console.error('AI fetch error:', error);
+                return null;
+            }
+        }
+
+        async function handleAIChatSubmit(event) {
+            event.preventDefault();
+            const user = currentUser();
+            const input = document.getElementById('aiChatInput');
+            if (!input) return;
+
+            const message = input.value.trim();
+            if (!message) return;
+
+            if (!Array.isArray(user.aiConversation)) {
+                user.aiConversation = [];
+            }
+
+            user.aiConversation.push({ role: 'user', text: message });
+            renderAIChat(user);
+
+            let reply = getAIResponseForPrompt(user, message);
+            const realAiReply = await callRealAIModel(user, message);
+            if (realAiReply) {
+                reply = realAiReply;
+            }
+
+            user.aiConversation.push({ role: 'bot', text: reply });
+            renderAIChat(user);
+            input.value = '';
+            saveStore();
+        }
+
+        function clearAIChatHistory() {
+            const user = currentUser();
+            user.aiConversation = [];
+            user.aiConversation.push({ role: 'bot', text: getAIResponseForPrompt(user, 'hello') });
+            renderAIChat(user);
+            saveStore();
+        }
+
+        function generateAIAdvice(user) {
+            const lowScores = Object.entries(user.scores).filter(([_, score]) => score < 80);
+            const weakSubject = lowScores.length ? lowScores[0][0] : 'all subjects';
+            const adviceText = appState.language === 'rw'
+                ? `Uyu munyeshuri afite iterambere ryiza. Yagombye gukora imyitozo ku isomo rya ${weakSubject} no kwitabira amasomo yose kugira ngo akomeze kuyobora GPA ye ku rwego rwiza.`
+                : `Your university performance is strong overall. Focus on improving ${weakSubject} and maintaining consistent attendance and revision to protect your current GPA.`;
+            document.getElementById('aiAdvice').textContent = adviceText;
+            renderAIChat(user);
+        }
+
+        function buildScoresFromCourses(user) {
+            const scoreMap = {};
+            (user.courses || []).forEach((course) => {
+                scoreMap[course.name] = Number(course.grade || 0);
+            });
+            user.scores = scoreMap;
+        }
+
+        function updateQuickScoreSummary() {
+            const user = currentUser();
+            const courseInput = document.getElementById('courseInput');
+            const scoreInput = document.getElementById('scoreInput');
+            const summary = document.getElementById('quickScoreSummary');
+            if (!summary) return;
+
+            const courses = Array.isArray(user.courses) ? user.courses : [];
+            const overallAverage = calculateOverallMarkPercentage(user);
+
+            const selectedCourseName = courseInput && courseInput.value ? String(courseInput.value).trim() : '';
+            const selectedCourse = selectedCourseName
+                ? courses.find((course) => (course.name || '').toLowerCase() === selectedCourseName.toLowerCase())
+                : null;
+            const selectedGrade = selectedCourse ? Number(selectedCourse.grade || 0) : 0;
+            const activeScore = Number(scoreInput && scoreInput.value !== '' ? scoreInput.value : selectedGrade || 0);
+            const scorePreview = Number.isFinite(activeScore) ? Math.min(100, Math.max(0, activeScore)) : 0;
+
+            const courseText = selectedCourse
+                ? `Selected course: ${selectedCourse.name} = ${selectedGrade}%`
+                : 'Selected course: no course selected';
+            const overallText = `Overall registered subjects: ${overallAverage.toFixed(1)}%`;
+            summary.textContent = `${courseText} • ${overallText} • Live update preview: ${scorePreview}%`;
+        }
+
+        function populateCourseOptions() {
+            const user = currentUser();
+            const taskDatalist = document.getElementById('taskUploadCourseOptions');
+            const names = Array.from(new Set((user.courses || []).map((course) => course.name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+
+            if (taskDatalist) {
+                taskDatalist.innerHTML = names.map((name) => `<option value="${name}"></option>`).join('');
+            }
+
+            const courseInput = document.getElementById('courseInput');
+            if (courseInput) {
+                const currentValue = courseInput.value || names[0] || '';
+                courseInput.innerHTML = names.map((name) => `<option value="${name}">${name}</option>`).join('');
+                if (names.includes(currentValue)) {
+                    courseInput.value = currentValue;
+                } else if (names.length) {
+                    courseInput.value = names[0];
+                } else {
+                    courseInput.innerHTML = '<option value="">No courses registered</option>';
+                    courseInput.value = '';
+                }
+            }
+
+            updateQuickScoreSummary();
+        }
+
+        function renderCourseTable() {
+            const user = currentUser();
+            const tbody = document.getElementById('coursesTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = (user.courses || []).map((course, index) => `
+                <tr>
+                    <td><input data-row-index="${index}" data-field="name" value="${course.name}" /></td>
+                    <td><input data-row-index="${index}" data-field="code" value="${course.code}" /></td>
+                    <td><input data-row-index="${index}" data-field="grade" type="number" min="0" max="100" value="${course.grade}" /></td>
+                    <td><input data-row-index="${index}" data-field="credits" type="number" min="1" max="10" value="${course.credits}" /></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateTaskUploadCourseSummary() {
+            const user = currentUser();
+            const courseInput = document.getElementById('taskUploadCourseInput');
+            const courseName = (courseInput && courseInput.value ? courseInput.value.trim() : '');
+            const selectedCourse = Array.isArray(user.courses)
+                ? user.courses.find((course) => (course.name || '').toLowerCase() === courseName.toLowerCase())
+                : null;
+            const coursePercentage = selectedCourse ? Number(selectedCourse.grade) || 0 : 0;
+            const overallPercentage = Number(user.taskOverallPercentage) || 0;
+
+            const courseLabel = document.getElementById('taskCoursePercentageValue');
+            if (courseLabel) {
+                courseLabel.textContent = `Course total: ${coursePercentage}%`;
+            }
+
+            const overallLabel = document.getElementById('taskOverallPercentageValue');
+            if (overallLabel) {
+                overallLabel.textContent = `All courses total: ${overallPercentage}%`;
+            }
+        }
+
+        function syncTaskUploadMetrics(user) {
+            const uploads = Array.isArray(user.taskUploads) ? user.taskUploads : [];
+            const courseMarks = Array.isArray(user.courses)
+                ? user.courses.map((course) => Number(course.grade) || 0)
+                : [];
+            const overall = courseMarks.length
+                ? courseMarks.reduce((sum, value) => sum + value, 0) / courseMarks.length
+                : 0;
+
+            user.taskOverallPercentage = Number(overall.toFixed(1));
+
+            uploads.forEach((task) => {
+                const matchingCourse = Array.isArray(user.courses)
+                    ? user.courses.find((course) => (course.name || '').toLowerCase() === (task.course || '').toLowerCase())
+                    : null;
+                const courseGrade = matchingCourse ? Number(matchingCourse.grade) || 0 : 0;
+                task.percentage = courseGrade;
+                task.overallPercentage = user.taskOverallPercentage;
+                task.courseOverallPercentage = user.taskOverallPercentage;
+            });
+
+            user.courseTaskSummary = {
+                overall: user.taskOverallPercentage
+            };
+
+            updateTaskUploadCourseSummary();
+            return user.taskOverallPercentage;
+        }
+
+        function renderTaskUploadsTable() {
+            const user = currentUser();
+            const tbody = document.getElementById('taskUploadsTableBody');
+            const assignmentTbody = document.getElementById('assignmentTasksTableBody');
+            if (!tbody && !assignmentTbody) return;
+
+            const uploads = Array.isArray(user.taskUploads) ? user.taskUploads : [];
+            if (tbody) {
+                tbody.innerHTML = uploads.length ? uploads.map((task, index) => `
+                    <tr>
+                        <td>${task.date || '-'}</td>
+                        <td>${task.course || '-'}</td>
+                        <td>${task.taskName || '-'}</td>
+                        <td>${Number(task.mark ?? task.percentage ?? 0) || 0}%</td>
+                        <td>${task.documentName ? `<a href="${task.documentData || '#'}" target="_blank" rel="noopener noreferrer">${task.documentName}</a>` : 'No file'}</td>
+                        <td>${Number(task.percentage) || 0}%</td>
+                        <td>${Number(task.overallPercentage) || user.taskOverallPercentage || 0}%</td>
+                        <td><button type="button" class="btn btn-danger" data-delete-task-index="${index}">Delete</button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="8">No uploaded task records yet.</td></tr>';
+            }
+
+            if (assignmentTbody) {
+                assignmentTbody.innerHTML = uploads.length ? uploads.map((task, index) => {
+                    const taskStatus = (task.completed || String(task.status || '').toLowerCase() === 'complete') ? 'Complete' : 'Not complete';
+                    const taskType = task.assignmentType || task.type || 'Assignment';
+                    return `
+                        <tr>
+                            <td>${task.taskName || 'Untitled task'}</td>
+                            <td>${task.course || '-'}</td>
+                            <td>${taskType}</td>
+                            <td>${task.date || '-'}</td>
+                            <td><span class="status-pill ${taskStatus === 'Complete' ? 'done' : 'pending'}">${taskStatus}</span></td>
+                            <td><button type="button" class="btn btn-danger" data-delete-task-index="${index}">Delete</button></td>
+                        </tr>
+                    `;
+                }).join('') : '<tr><td colspan="6">No assigned tasks yet.</td></tr>';
+            }
+        }
+
+        function renderAttendanceTable() {
+            const user = currentUser();
+            const tbody = document.getElementById('attendanceTableBody');
+            if (!tbody) return;
+
+            const periodValue = user.academicPeriod || 'Academic period';
+            const periodLabel = document.getElementById('activeAcademicPeriodValue');
+            if (periodLabel) periodLabel.textContent = periodValue;
+
+            tbody.innerHTML = (user.attendanceRecords || []).map((record, index) => `
+                <tr>
+                    <td><input data-att-row="${index}" data-att-field="date" type="date" value="${record.date || ''}" /></td>
+                    <td><input data-att-row="${index}" data-att-field="course" value="${record.course || ''}" /></td>
+                    <td>
+                        <select data-att-row="${index}" data-att-field="present">
+                            <option value="present" ${record.present ? 'selected' : ''}>Present</option>
+                            <option value="absent" ${!record.present ? 'selected' : ''}>Absent</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" data-att-action="reset" data-att-row="${index}">Restart</button>
+                            <button type="button" class="btn btn-danger" data-att-action="delete" data-att-row="${index}">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function syncUserAttendanceMetrics() {
+            const user = currentUser();
+            const records = Array.isArray(user.attendanceRecords) ? user.attendanceRecords : [];
+            const total = records.length;
+            const present = records.filter((record) => normalizeAttendanceStatus(record)).length;
+            const attendancePct = total ? (present / total) * 100 : 0;
+            user.attendance = Math.min(100, Math.max(0, Number(attendancePct.toFixed(1))));
+
+            const overallValue = document.getElementById('overallAttendanceValue');
+            if (overallValue) overallValue.textContent = `${user.attendance}%`;
+
+            const nextAction = document.getElementById('nextActionValue');
+            if (nextAction) {
+                nextAction.textContent = user.attendance < 80 ? 'Improve attendance' : 'Attend all lectures';
+            }
+
+            const courseAttendanceMap = {};
+            records.forEach((record) => {
+                const courseName = (record.course || 'General').trim() || 'General';
+                if (!courseAttendanceMap[courseName]) {
+                    courseAttendanceMap[courseName] = { total: 0, present: 0 };
+                }
+                courseAttendanceMap[courseName].total += 1;
+                if (normalizeAttendanceStatus(record)) {
+                    courseAttendanceMap[courseName].present += 1;
+                }
+            });
+
+            const list = document.getElementById('courseAttendanceList');
+            if (list) {
+                const items = Object.entries(courseAttendanceMap)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([courseName, data]) => {
+                        const percent = data.total ? (data.present / data.total) * 100 : 0;
+                        return `<li><strong>${courseName}:</strong> ${Math.round(percent)}%</li>`;
+                    });
+                list.innerHTML = items.length ? items.join('') : '<li>No attendance data yet.</li>';
+            }
+        }
+
+        function calculateOverallMarkPercentage(user) {
+            const courses = Array.isArray(user.courses) ? user.courses : [];
+            const uploads = Array.isArray(user.taskUploads) ? user.taskUploads : [];
+            const allMarks = [
+                ...courses.map((course) => Number(course.grade || 0)),
+                ...uploads.map((task) => Number(task.mark ?? task.percentage ?? 0))
+            ].filter((value) => Number.isFinite(value));
+
+            if (!allMarks.length) {
+                return 0;
+            }
+
+            const total = allMarks.reduce((sum, mark) => sum + mark, 0);
+            return total / allMarks.length;
+        }
+
+        function syncUserCourseMetrics() {
+            const user = currentUser();
+            syncTaskUploadMetrics(user);
+            if (!user.courses || !user.courses.length) {
+                user.credits = 0;
+                user.gpa = 0;
+                user.scores = {};
+                return;
+            }
+
+            const totalCredits = user.courses.reduce((sum, course) => sum + Number(course.credits || 0), 0);
+            const totalMarks = user.courses.reduce((sum, course) => sum + Number(course.grade || 0) * Number(course.credits || 0), 0);
+            const averageMark = totalCredits ? totalMarks / totalCredits : 0;
+            const gpa = Math.min(4, (averageMark / 100) * 4);
+
+            user.credits = totalCredits;
+            user.gpa = Number(gpa.toFixed(2));
+            user.attendance = Math.min(100, Math.max(0, user.attendance));
+            buildScoresFromCourses(user);
+        }
+
+        function getWeakestCourse(user) {
+            const courses = Array.isArray(user.courses) ? user.courses.filter((course) => Number.isFinite(Number(course.grade))) : [];
+            if (!courses.length) {
+                return 'No data';
+            }
+            return courses.reduce((lowest, current) => {
+                const lowestGrade = Number(lowest.grade || 100);
+                const currentGrade = Number(current.grade || 100);
+                return currentGrade < lowestGrade ? current : lowest;
+            }).name || 'No data';
+        }
+
+        function renderCourseStatusList() {
+            const user = currentUser();
+            const container = document.getElementById('courseStatusList');
+            if (!container) return;
+
+            const courses = Array.isArray(user.courses) ? user.courses : [];
+            if (!courses.length) {
+                container.innerHTML = '<div class="subject-row"><strong>No course data yet</strong><span>0%</span></div>';
+                return;
+            }
+
+            const attendanceByCourse = {};
+            (user.attendanceRecords || []).forEach((record) => {
+                const courseName = (record.course || '').trim() || 'General';
+                if (!attendanceByCourse[courseName]) {
+                    attendanceByCourse[courseName] = { total: 0, present: 0 };
+                }
+                attendanceByCourse[courseName].total += 1;
+                if (normalizeAttendanceStatus(record)) {
+                    attendanceByCourse[courseName].present += 1;
+                }
+            });
+
+            container.innerHTML = courses.map((course) => {
+                const attendance = attendanceByCourse[course.name] || { total: 0, present: 0 };
+                const attendancePct = attendance.total ? Math.round((attendance.present / attendance.total) * 100) : 0;
+                return `
+                    <div class="subject-row">
+                        <strong>${course.name}</strong>
+                        <span>${course.grade}% • ${attendancePct}%</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDashboard() {
+            const user = currentUser();
+            syncUserCourseMetrics();
+            syncUserAttendanceMetrics();
+            populateCourseOptions();
+            updateTaskUploadCourseSummary();
+
+            const overallGrade = calculateOverallMarkPercentage(user);
+            setText('gpaValue', user.gpa.toFixed(1));
+            setText('attendanceValue', user.attendance + '%');
+            setText('creditsValue', String(user.credits));
+            setText('subjectProgress', Math.round(overallGrade) + '%');
+            setText('aiAdvice', user.advice);
+            setText('liveSignal', `Last update: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+            setText('overallAttendanceValue', `${user.attendance}%`);
+            setText('nextActionValue', user.attendance < 80 ? 'Improve attendance' : 'Attend all lectures');
+            setText('overviewStudentName', user.name);
+            setText('overviewFaculty', user.faculty);
+            setText('overviewYear', user.year);
+            setText('overviewAcademicPeriod', user.academicPeriod || 'Academic period');
+            setText('overviewCourseCount', String((user.courses || []).length));
+            setText('overviewWeakCourse', getWeakestCourse(user));
+            generateAIAdvice(user);
+            renderCourseStatusList();
+            renderCourseTable();
+            renderTaskUploadsTable();
+            renderAttendanceTable();
+            saveStore();
+        }
+
+        function handleLiveUpdate(event) {
+            event.preventDefault();
+
+            const course = document.getElementById('courseInput')?.value?.trim();
+            const score = Number(document.getElementById('scoreInput')?.value || 0);
+            const user = currentUser();
+            if (!Array.isArray(user.courses)) {
+                user.courses = [];
+            }
+
+            if (!course || Number.isNaN(score)) return;
+
+            const normalizedCourse = course.trim();
+            const targetCourse = user.courses.find((item) => item.name && item.name.toLowerCase() === normalizedCourse.toLowerCase());
+            const nextGrade = Math.min(100, Math.max(0, score));
+
+            if (targetCourse) {
+                targetCourse.grade = nextGrade;
+            } else {
+                user.courses.push({
+                    name: normalizedCourse,
+                    code: normalizedCourse.split(' ').map((part) => part[0]).join('').toUpperCase().slice(0, 6) || 'NEW',
+                    grade: nextGrade,
+                    credits: 3
+                });
+            }
+
+            const attendanceCourse = document.getElementById('attendanceCourseInput')?.value?.trim() || normalizedCourse;
+            const attendanceDate = document.getElementById('attendanceDateInput')?.value || new Date().toISOString().split('T')[0];
+            const attendancePeriod = document.getElementById('attendancePeriodInput')?.value?.trim() || user.academicPeriod || 'Academic period';
+            const attendanceStatus = document.getElementById('attendanceStatusInput')?.value || 'present';
+
+            if (!Array.isArray(user.attendanceRecords)) {
+                user.attendanceRecords = [];
+            }
+
+            if (attendanceCourse && attendanceDate) {
+                user.academicPeriod = attendancePeriod;
+                const existingRecordIndex = user.attendanceRecords.findIndex((record) => {
+                    return record.date === attendanceDate && record.course && record.course.toLowerCase() === attendanceCourse.toLowerCase();
+                });
+
+                const record = {
+                    date: attendanceDate,
+                    course: attendanceCourse,
+                    period: attendancePeriod,
+                    present: attendanceStatus === 'present'
+                };
+
+                if (existingRecordIndex >= 0) {
+                    user.attendanceRecords[existingRecordIndex] = record;
+                } else {
+                    user.attendanceRecords.push(record);
+                }
+            }
+
+            const overallAverage = user.courses.length
+                ? user.courses.reduce((sum, courseItem) => sum + Number(courseItem.grade || 0), 0) / user.courses.length
+                : 0;
+
+            user.advice = appState.language === 'rw'
+                ? `Ibyatanzwe byahindutse neza: ${normalizedCourse} ifite amanota ${nextGrade}. Amanota rusange y’amasomo yose ni ${overallAverage.toFixed(1)}%. Dashboard yerekeza amakuru ya ${attendanceCourse || normalizedCourse} hamwe n’icyiciro cy’amasomo cyahindutse.`
+                : `Dashboard updated successfully: ${normalizedCourse} is now recorded at ${nextGrade}. The overall registered-subject percentage is ${overallAverage.toFixed(1)}%. The latest course and attendance details were synced into the student dashboard.`;
+
+            renderDashboard();
+        }
+
+        function handleCourseUpdate(event) {
+            event.preventDefault();
+
+            const user = currentUser();
+            if (!Array.isArray(user.courses)) {
+                user.courses = [];
+            }
+
+            const name = document.getElementById('courseNameInput').value.trim();
+            const code = document.getElementById('courseCodeInput').value.trim();
+            const grade = Number(document.getElementById('courseGradeInput').value || 0);
+            const credits = Number(document.getElementById('courseCreditsInput').value || 0);
+
+            if (!name || !code || Number.isNaN(grade) || Number.isNaN(credits)) return;
+
+            const courseIndex = user.courses.findIndex((course) => {
+                const sameName = course.name && course.name.toLowerCase() === name.toLowerCase();
+                const sameCode = course.code && course.code.toLowerCase() === code.toLowerCase();
+                return sameName || sameCode;
+            });
+
+            const newCourse = {
+                name,
+                code,
+                grade: Math.min(100, Math.max(0, grade)),
+                credits: Math.max(1, credits)
+            };
+
+            if (courseIndex >= 0) {
+                user.courses[courseIndex] = newCourse;
+            } else {
+                user.courses.push(newCourse);
+            }
+
+            user.advice = appState.language === 'rw'
+                ? `Ibyatanzwe byahindutse neza: ${name} (${code}) ifite amanota ${newCourse.grade} ku credits ${newCourse.credits}.`
+                : `Updated data saved successfully for ${name} (${code}) with a grade of ${newCourse.grade} and ${newCourse.credits} credits.`;
+
+            renderDashboard();
+        }
+
+        function handleAssignmentTaskSubmit(event) {
+            event.preventDefault();
+            const user = currentUser();
+            if (!Array.isArray(user.taskUploads)) {
+                user.taskUploads = [];
+            }
+
+            const course = document.getElementById('assignmentCourseInput').value.trim();
+            const taskType = document.getElementById('assignmentTypeInput').value.trim();
+            const taskName = document.getElementById('assignmentNameInput').value.trim();
+            const date = document.getElementById('assignmentDateInput').value;
+            const status = document.getElementById('assignmentStatusInput').value;
+
+            if (!course || !taskName || !date) return;
+
+            const taskRecord = {
+                date,
+                course,
+                taskName,
+                taskType,
+                assignmentType: taskType,
+                status,
+                completed: status === 'complete',
+                mark: 0,
+                documentName: 'No document',
+                documentData: '',
+                percentage: 0,
+                overallPercentage: 0,
+                courseOverallPercentage: 0
+            };
+
+            user.taskUploads.push(taskRecord);
+            syncTaskUploadMetrics(user);
+            renderDashboard();
+            document.getElementById('assignmentTaskForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            const dueDateField = document.getElementById('assignmentDateInput');
+            if (dueDateField) dueDateField.value = today;
+        }
+
+        function handleTaskUploadSubmit(event) {
+            event.preventDefault();
+            const user = currentUser();
+            if (!Array.isArray(user.taskUploads)) {
+                user.taskUploads = [];
+            }
+
+            const date = document.getElementById('taskUploadDateInput').value;
+            const course = document.getElementById('taskUploadCourseInput').value.trim();
+            const taskName = document.getElementById('taskUploadNameInput').value.trim();
+            const markValue = Number(document.getElementById('taskUploadMarkInput').value || 0);
+            const fileInput = document.getElementById('taskUploadDocumentInput');
+
+            if (!date || !course || !taskName) return;
+
+            const matchingCourse = Array.isArray(user.courses)
+                ? user.courses.find((entry) => (entry.name || '').toLowerCase() === course.toLowerCase())
+                : null;
+            const derivedPercentage = matchingCourse ? Number(matchingCourse.grade) || 0 : 0;
+            const finalMark = Number.isFinite(markValue) && markValue >= 0 && markValue <= 100 ? markValue : derivedPercentage;
+
+            const taskRecord = {
+                date,
+                course,
+                taskName,
+                mark: finalMark,
+                status: 'complete',
+                completed: true,
+                assignmentType: 'Assignment',
+                documentName: fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0].name : 'No document',
+                documentData: '',
+                percentage: finalMark,
+                overallPercentage: 0,
+                courseOverallPercentage: 0
+            };
+
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    taskRecord.documentData = String(reader.result || '');
+                    user.taskUploads.push(taskRecord);
+                    syncTaskUploadMetrics(user);
+                    renderDashboard();
+                    document.getElementById('taskUploadForm').reset();
+                    const today = new Date().toISOString().split('T')[0];
+                    const dateField = document.getElementById('taskUploadDateInput');
+                    if (dateField) dateField.value = today;
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+                return;
+            }
+
+            user.taskUploads.push(taskRecord);
+            syncTaskUploadMetrics(user);
+            renderDashboard();
+            document.getElementById('taskUploadForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            const dateField = document.getElementById('taskUploadDateInput');
+            if (dateField) dateField.value = today;
+        }
+
+        const taskCourseInput = document.getElementById('taskUploadCourseInput');
+        if (taskCourseInput) {
+            taskCourseInput.addEventListener('input', updateTaskUploadCourseSummary);
+        }
+
+        const aiChatForm = document.getElementById('aiChatForm');
+        if (aiChatForm) {
+            aiChatForm.addEventListener('submit', handleAIChatSubmit);
+        }
+
+        const aiChatMessages = document.getElementById('aiChatMessages');
+        if (aiChatMessages) {
+            aiChatMessages.addEventListener('click', handleAIMessageAction);
+        }
+
+        const clearAiChatBtn = document.getElementById('clearAiChatBtn');
+        if (clearAiChatBtn) {
+            clearAiChatBtn.addEventListener('click', clearAIChatHistory);
+        }
+
+        const aiApiSaveBtn = document.getElementById('aiApiSaveBtn');
+        const aiApiKeyInput = document.getElementById('aiApiKeyInput');
+        const aiApiModelInput = document.getElementById('aiApiModelInput');
+        if (aiApiSaveBtn && aiApiKeyInput && aiApiModelInput) {
+            aiApiKeyInput.value = appState.aiApiKey || '';
+            aiApiModelInput.value = appState.aiApiModel || 'gpt-4o-mini';
+            aiApiSaveBtn.addEventListener('click', () => {
+                appState.aiApiKey = aiApiKeyInput.value.trim();
+                appState.aiApiModel = aiApiModelInput.value.trim() || 'gpt-4o-mini';
+                saveStore();
+                const user = currentUser();
+                if (user && Array.isArray(user.aiConversation) && !user.aiConversation.length) {
+                    user.aiConversation = [{ role: 'bot', text: getAIResponseForPrompt(user, 'hello') }];
+                    renderAIChat(user);
+                }
+            });
+        }
+
+        document.getElementById('taskUploadsTableBody').addEventListener('click', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement)) return;
+
+            const taskIndex = Number(target.dataset.deleteTaskIndex);
+            if (Number.isNaN(taskIndex)) return;
+
+            const user = currentUser();
+            if (!Array.isArray(user.taskUploads)) return;
+            user.taskUploads.splice(taskIndex, 1);
+            syncTaskUploadMetrics(user);
+            renderDashboard();
+        });
+
+        document.getElementById('coursesTableBody').addEventListener('input', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement)) return;
+
+            const rowIndex = Number(target.dataset.rowIndex);
+            const field = target.dataset.field;
+            const user = currentUser();
+            if (!Array.isArray(user.courses)) {
+                user.courses = [];
+            }
+
+            const row = user.courses[rowIndex];
+            if (!row) return;
+
+            if (field === 'name') row.name = target.value.trim() || row.name;
+            if (field === 'code') row.code = target.value.trim() || row.code;
+            if (field === 'grade') row.grade = Math.min(100, Math.max(0, Number(target.value || 0)));
+            if (field === 'credits') row.credits = Math.max(1, Number(target.value || 1));
+
+            renderDashboard();
+        });
+
+        function handleAttendanceEntrySubmit(event) {
+            event.preventDefault();
+            const user = currentUser();
+            if (!Array.isArray(user.attendanceRecords)) {
+                user.attendanceRecords = [];
+            }
+
+            const date = document.getElementById('attendanceDateInput').value;
+            const course = document.getElementById('attendanceCourseInput').value.trim();
+            const period = document.getElementById('attendancePeriodInput').value.trim();
+            const present = document.getElementById('attendanceStatusInput').value === 'present';
+
+            if (!date || !course || !period) return;
+
+            user.academicPeriod = period;
+            user.academicPeriod = period;
+            user.attendanceRecords.push({ date, course, period: user.academicPeriod, present });
+            user.advice = appState.language === 'rw'
+                ? `Kwitabira kwa ${course} mu gihembwe cya ${period} ku itariki ${date} kwanditswe neza.`
+                : `Attendance for ${course} in ${period} on ${date} was saved successfully.`;
+
+            document.getElementById('attendanceEntryForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDateInput').value = today;
+            const periodField = document.getElementById('attendancePeriodInput');
+            if (periodField) periodField.value = user.academicPeriod;
+            renderDashboard();
+        }
+
+        function handleAttendanceTableInput(event) {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+            const rowIndex = Number(target.dataset.attRow);
+            const field = target.dataset.attField;
+            const user = currentUser();
+            if (!Array.isArray(user.attendanceRecords)) {
+                user.attendanceRecords = [];
+            }
+
+            const row = user.attendanceRecords[rowIndex];
+            if (!row) return;
+
+            if (field === 'date') row.date = target.value;
+            if (field === 'course') row.course = target.value.trim() || row.course;
+            if (field === 'present') row.present = target.value === 'present';
+
+            user.advice = appState.language === 'rw'
+                ? `Icyiciro cy’amasomo cyahindutse ku gutabira.`
+                : `Attendance record updated for the selected student.`;
+
+            renderDashboard();
+        }
+
+        function handleAttendanceAction(event) {
+            const button = event.target.closest('[data-att-action]');
+            if (!button) return;
+
+            const user = currentUser();
+            const rowIndex = Number(button.dataset.attRow);
+            if (!Array.isArray(user.attendanceRecords) || !user.attendanceRecords[rowIndex]) return;
+
+            const action = button.dataset.attAction;
+            if (action === 'delete') {
+                user.attendanceRecords.splice(rowIndex, 1);
+                user.advice = appState.language === 'rw'
+                    ? 'Icyitonderwa cyasibwe neza.'
+                    : 'Attendance entry deleted successfully.';
+            }
+
+            if (action === 'reset') {
+                user.attendanceRecords[rowIndex] = {
+                    date: '',
+                    course: '',
+                    period: 'Academic period',
+                    present: false
+                };
+                user.advice = appState.language === 'rw'
+                    ? 'Icyitonderwa cyasubiwemo ku byibanze.'
+                    : 'Attendance entry reset successfully.';
+            }
+
+            renderDashboard();
+        }
+
+        function resetAttendanceForm() {
+            const form = document.getElementById('attendanceEntryForm');
+            if (form) form.reset();
+            const today = new Date().toISOString().split('T')[0];
+            const dateField = document.getElementById('attendanceDateInput');
+            if (dateField) dateField.value = today;
+            const statusField = document.getElementById('attendanceStatusInput');
+            if (statusField) statusField.value = 'present';
+            const periodField = document.getElementById('attendancePeriodInput');
+            const user = currentUser();
+            if (periodField) periodField.value = user.academicPeriod || 'Academic period';
+        }
+
+        const passwordToggleBtn = document.getElementById('passwordToggleBtn');
+        const passwordInput = document.getElementById('loginPassword');
+        if (passwordToggleBtn && passwordInput) {
+            passwordToggleBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                passwordToggleBtn.textContent = isPassword ? '🙈' : '👁';
+                passwordToggleBtn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+            });
+        }
+
+        sanitizeEmailField(document.getElementById('loginEmail'));
+        sanitizeEmailField(document.getElementById('googleEmailInput'));
+        sanitizeEmailField(document.getElementById('profileEmailInput'));
+
+        document.querySelectorAll('.login-tab-btn').forEach((button) => {
+            button.addEventListener('click', () => setAuthMode(button.dataset.authMode));
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            const chooser = document.getElementById('googleChooser');
+            const googleField = document.getElementById('googleEmailField');
+            if (googleField) googleField.style.display = 'none';
+            renderGoogleChooser();
+            if (chooser) {
+                chooser.classList.toggle('visible', true);
+            }
+        });
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        document.getElementById('liveUpdateForm').addEventListener('submit', handleLiveUpdate);
+        document.getElementById('courseInput')?.addEventListener('change', updateQuickScoreSummary);
+        document.getElementById('scoreInput')?.addEventListener('input', updateQuickScoreSummary);
+        document.getElementById('courseUpdateForm').addEventListener('submit', handleCourseUpdate);
+        document.getElementById('assignmentTaskForm').addEventListener('submit', handleAssignmentTaskSubmit);
+        document.getElementById('taskUploadForm').addEventListener('submit', handleTaskUploadSubmit);
+        document.getElementById('profileForm').addEventListener('submit', handleProfileSave);
+        document.getElementById('deleteProfileBtn').addEventListener('click', deleteSelectedProfile);
+        document.getElementById('addStudentBtn').addEventListener('click', addStudentProfile);
+        document.getElementById('attendanceEntryForm').addEventListener('submit', handleAttendanceEntrySubmit);
+        document.getElementById('attendanceTableBody').addEventListener('input', handleAttendanceTableInput);
+        document.getElementById('attendanceTableBody').addEventListener('change', handleAttendanceTableInput);
+        document.getElementById('attendanceTableBody').addEventListener('click', handleAttendanceAction);
+        document.getElementById('resetAttendanceFormBtn').addEventListener('click', resetAttendanceForm);
+
+        function syncNavState(target) {
+            const activeTarget = target || 'dashboard';
+            document.querySelectorAll('.nav-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.target === activeTarget);
+            });
+            document.querySelectorAll('.page-section').forEach((section) => {
+                section.classList.toggle('active', section.id === activeTarget);
+            });
+        }
+
+        document.querySelectorAll('.nav-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = button.dataset.target;
+                syncNavState(target);
+                const panel = document.getElementById('navPanel');
+                const menuBtn = document.getElementById('navMenuBtn');
+                if (panel && panel.classList.contains('show')) {
+                    panel.classList.remove('show');
+                    if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+
+        const navMenuBtn = document.getElementById('navMenuBtn');
+        const navPanel = document.getElementById('navPanel');
+        if (navMenuBtn && navPanel) {
+            navMenuBtn.addEventListener('click', () => {
+                const isOpen = navPanel.classList.toggle('show');
+                navMenuBtn.setAttribute('aria-expanded', String(isOpen));
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!navPanel.contains(event.target) && !navMenuBtn.contains(event.target)) {
+                    navPanel.classList.remove('show');
+                    navMenuBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        document.querySelectorAll('.lang-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                appState.language = button.dataset.lang;
+                saveStore();
+                updateLanguageUI();
+                renderDashboard();
+            });
+        });
+
+        document.querySelectorAll('.theme-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                applyTheme(button.dataset.theme);
+            });
+        });
+
+        const ellipsisTrigger = document.querySelector('.ellipsis-trigger');
+        const settingsGhost = document.querySelector('.settings-ghost');
+        if (ellipsisTrigger && settingsGhost) {
+            ellipsisTrigger.addEventListener('click', () => {
+                const isVisible = settingsGhost.style.opacity === '1';
+                settingsGhost.style.opacity = isVisible ? '0' : '1';
+                settingsGhost.style.width = isVisible ? '0' : 'auto';
+                settingsGhost.style.pointerEvents = isVisible ? 'none' : 'auto';
+                settingsGhost.style.transform = isVisible ? 'translateX(8px)' : 'translateX(0)';
+            });
+        }
+
+        applyTheme(appState.theme || 'current');
+        updateLanguageUI();
+        renderDashboard();
+
+        // Open Live button behavior
+        (function() {
+            const btn = document.getElementById('openLiveBtn');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                try {
+                    const url = location.href.split('#')[0];
+                    window.open(url, '_blank');
+                } catch (e) {
+                    alert('Unable to open window: ' + (e && e.message ? e.message : e));
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
