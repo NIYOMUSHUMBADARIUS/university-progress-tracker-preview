@@ -1,15 +1,9 @@
 const CACHE_NAME = 'university-progress-hub-v1';
 const APP_URL = new URL('./', self.registration.scope).href;
-const ASSETS = [
-    APP_URL,
-    new URL('./manifest.webmanifest', self.registration.scope).href,
-    new URL('./app-icon.svg', self.registration.scope).href
-];
-
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(ASSETS))
+            .then((cache) => cache.add(APP_URL))
             .then(() => self.skipWaiting())
     );
 });
@@ -33,7 +27,7 @@ self.addEventListener('fetch', (event) => {
                 .then((response) => {
                     if (response.ok) {
                         const copy = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(APP_URL, copy));
+                        event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(APP_URL, copy)));
                     }
                     return response;
                 })
@@ -46,7 +40,7 @@ self.addEventListener('fetch', (event) => {
         caches.match(request).then((cached) => cached || fetch(request).then((response) => {
             if (response.ok) {
                 const copy = response.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+                event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
             }
             return response;
         }))
