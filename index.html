@@ -227,6 +227,28 @@
             align-items: center;
         }
 
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .connection-dot {
+            width: 9px;
+            height: 9px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: var(--warning);
+        }
+
+        .connection-status[data-state="online"] .connection-dot { background: var(--success); }
+        .connection-status[data-state="offline"] .connection-dot { background: var(--danger); }
+        .connection-status[data-state="unknown"] .connection-dot { background: var(--muted); }
+
         .settings-ghost {
             display: flex;
             align-items: center;
@@ -1157,6 +1179,11 @@
                     <button class="nav-btn" data-target="attendance">Attendance</button>
                     <button class="nav-btn" data-target="ai">AI Advisor</button>
                 </div>
+            </div>
+
+            <div id="connectionStatus" class="connection-status" data-state="checking" role="status" aria-live="polite" aria-atomic="true">
+                <span class="connection-dot" aria-hidden="true"></span>
+                <span id="connectionStatusText">Checking connection...</span>
             </div>
 
             <div class="actions">
@@ -2248,6 +2275,64 @@
             return translations[appState.language][key] || key;
         }
 
+        let connectionState = 'checking';
+        let connectionCheckInProgress = false;
+
+        function updateConnectionStatus(state) {
+            connectionState = state;
+            const status = document.getElementById('connectionStatus');
+            const label = document.getElementById('connectionStatusText');
+            if (!status || !label) return;
+
+            const labels = appState.language === 'rw'
+                ? {
+                    checking: 'Igenzura umurongo...',
+                    online: 'Internet irahari',
+                    offline: 'Nta murongo wa internet',
+                    unknown: 'Local file: internet ntigenzuwe'
+                }
+                : {
+                    checking: 'Checking connection...',
+                    online: 'Internet connected',
+                    offline: 'No internet connection',
+                    unknown: 'Local file: connection unchecked'
+                };
+
+            status.dataset.state = state;
+            label.textContent = labels[state] || labels.unknown;
+        }
+
+        async function checkInternetConnection() {
+            if (location.protocol === 'file:') {
+                updateConnectionStatus('unknown');
+                return;
+            }
+            if (!navigator.onLine) {
+                updateConnectionStatus('offline');
+                return;
+            }
+            if (connectionCheckInProgress) return;
+
+            connectionCheckInProgress = true;
+            updateConnectionStatus('checking');
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+
+            try {
+                const response = await fetch(new URL('./', location.href), {
+                    method: 'HEAD',
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                updateConnectionStatus(response.ok ? 'online' : 'offline');
+            } catch (error) {
+                updateConnectionStatus('offline');
+            } finally {
+                window.clearTimeout(timeoutId);
+                connectionCheckInProgress = false;
+            }
+        }
+
         function renderUserSwitcher() {
             const list = document.getElementById('studentList');
             if (!list) return;
@@ -2425,6 +2510,7 @@
             document.querySelectorAll('.lang-btn').forEach((btn) => {
                 btn.classList.toggle('active', btn.dataset.lang === appState.language);
             });
+            updateConnectionStatus(connectionState);
 
             const loginTabButtons = document.querySelectorAll('.login-tab-btn');
             loginTabButtons.forEach((button) => {
@@ -2767,6 +2853,8 @@
                 ]
             };
 
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 12000);
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
@@ -2774,7 +2862,8 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
 
                 if (!response.ok) {
@@ -2786,6 +2875,8 @@
             } catch (error) {
                 console.error('AI fetch error:', error);
                 return null;
+            } finally {
+                window.clearTimeout(timeoutId);
             }
         }
 
@@ -2806,9 +2897,15 @@
             renderAIChat(user);
 
             let reply = getAIResponseForPrompt(user, message);
+            const hasApiKey = Boolean((appState.aiApiKey || '').trim());
             const realAiReply = await callRealAIModel(user, message);
             if (realAiReply) {
                 reply = realAiReply;
+            } else {
+                const fallbackNote = appState.language === 'rw'
+                    ? (hasApiKey ? 'Serivisi ya AI ntibonetse; dore inama z’ibanze zakozwe muri app.' : 'Izi ni inama z’ibanze zakozwe muri app; AI yo kuri internet ntirashyirwaho.')
+                    : (hasApiKey ? 'The AI service is unavailable; showing built-in guidance.' : 'Showing built-in guidance; online AI is not configured.');
+                reply = `${reply}\n\n${fallbackNote}`;
             }
 
             user.aiConversation.push({ role: 'bot', text: reply });
@@ -3661,6 +3758,13 @@
             });
         });
 
+        window.addEventListener('online', checkInternetConnection);
+        window.addEventListener('offline', () => updateConnectionStatus('offline'));
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) checkInternetConnection();
+        });
+        window.setInterval(checkInternetConnection, 30000);
+
         const ellipsisTrigger = document.querySelector('.ellipsis-trigger');
         const settingsGhost = document.querySelector('.settings-ghost');
         if (ellipsisTrigger && settingsGhost) {
@@ -3676,6 +3780,7 @@
         applyTheme(appState.theme || 'current');
         updateLanguageUI();
         renderDashboard();
+        checkInternetConnection();
 
         // Open Live button behavior
         (function() {
