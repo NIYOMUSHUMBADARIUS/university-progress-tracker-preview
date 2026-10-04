@@ -3758,7 +3758,10 @@
             });
         });
 
-        window.addEventListener('online', checkInternetConnection);
+        window.addEventListener('online', () => {
+            updateConnectionStatus('checking');
+            window.setTimeout(checkInternetConnection, 1000);
+        });
         window.addEventListener('offline', () => updateConnectionStatus('offline'));
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) checkInternetConnection();
