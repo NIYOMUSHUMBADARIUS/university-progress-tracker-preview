@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071827">
+    <link rel="manifest" href="./manifest.webmanifest">
     <title>University Progress Tracker</title>
     <style>
         * { box-sizing: border-box; }
@@ -1210,6 +1212,7 @@
                 <span class="connection-dot" aria-hidden="true"></span>
                 <span id="connectionStatusText">Checking connection...</span>
             </div>
+            <button id="installAppBtn" class="btn btn-secondary" type="button" hidden>Install app</button>
 
             <div class="actions">
                 <div class="settings-ghost" aria-label="Hidden settings">
@@ -3818,6 +3821,36 @@
         renderDashboard();
         checkInternetConnection();
         document.getElementById('appStartup')?.classList.add('hidden');
+
+        let deferredInstallPrompt = null;
+        const installAppBtn = document.getElementById('installAppBtn');
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            if (installAppBtn) {
+                installAppBtn.hidden = false;
+                installAppBtn.textContent = appState.language === 'rw' ? 'Shyiramo app' : 'Install app';
+            }
+        });
+        if (installAppBtn) {
+            installAppBtn.addEventListener('click', async () => {
+                if (!deferredInstallPrompt) return;
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                installAppBtn.hidden = true;
+            });
+        }
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            if (installAppBtn) installAppBtn.hidden = true;
+        });
+
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+                console.error('Offline app setup failed:', error);
+            });
+        }
     </script>
 </body>
 </html>

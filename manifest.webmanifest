@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "University Progress Hub",
+  "short_name": "Progress Hub",
+  "description": "Track university courses, attendance, and academic progress.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#071827",
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
