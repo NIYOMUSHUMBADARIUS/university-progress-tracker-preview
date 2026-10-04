@@ -1,10 +1,8 @@
-const CACHE_NAME = 'university-progress-hub-v1';
+const CACHE_NAME = 'university-progress-hub-v2';
 const APP_URL = new URL('./', self.registration.scope).href;
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.add(APP_URL))
-            .then(() => self.skipWaiting())
+        self.skipWaiting()
     );
 });
 
