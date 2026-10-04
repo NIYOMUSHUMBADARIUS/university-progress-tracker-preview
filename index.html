@@ -2333,6 +2333,21 @@
             }
         }
 
+        function scheduleReconnectCheck(attempt = 0) {
+            window.setTimeout(async () => {
+                if (connectionState === 'online' || !navigator.onLine) return;
+                if (connectionCheckInProgress) {
+                    scheduleReconnectCheck(attempt);
+                    return;
+                }
+
+                await checkInternetConnection();
+                if (connectionState === 'offline' && navigator.onLine && attempt < 2) {
+                    scheduleReconnectCheck(attempt + 1);
+                }
+            }, 1000);
+        }
+
         function renderUserSwitcher() {
             const list = document.getElementById('studentList');
             if (!list) return;
@@ -3760,7 +3775,7 @@
 
         window.addEventListener('online', () => {
             updateConnectionStatus('checking');
-            window.setTimeout(checkInternetConnection, 1000);
+            scheduleReconnectCheck();
         });
         window.addEventListener('offline', () => updateConnectionStatus('offline'));
         document.addEventListener('visibilitychange', () => {
